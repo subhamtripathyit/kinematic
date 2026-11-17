@@ -9,6 +9,7 @@ import { RoutinesScreen } from './ui/screens/RoutinesScreen';
 import { RoutineEditor } from './ui/screens/RoutineEditor';
 import { RoutineRunner } from './ui/screens/RoutineRunner';
 import { RoutineSummaryScreen } from './ui/screens/RoutineSummaryScreen';
+import { BodyScreen } from './ui/body/BodyScreen';
 import { buildSummary, hasProgress, type SessionSummary } from './state/session';
 import { bestSetValue, loadHistory, saveSession } from './state/history';
 import { computeBadges, newlyEarned, type Badge } from './state/badges';
@@ -41,12 +42,19 @@ type Screen =
       newBadges: Badge[];
       streak: number;
     }
+  | { name: 'body' }
   | { name: 'history' };
 
-type Tab = 'exercises' | 'routines' | 'history';
+type Tab = 'exercises' | 'routines' | 'body' | 'history';
 
 const tabOf = (screen: Screen): Tab =>
-  screen.name === 'history' ? 'history' : screen.name.startsWith('routine') ? 'routines' : 'exercises';
+  screen.name === 'history'
+    ? 'history'
+    : screen.name === 'body'
+      ? 'body'
+      : screen.name.startsWith('routine')
+        ? 'routines'
+        : 'exercises';
 
 const voiceSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
 
@@ -139,6 +147,7 @@ export default function App() {
             [
               ['exercises', 'Exercises', { name: 'picker' }],
               ['routines', 'Routines', { name: 'routines' }],
+              ['body', 'Body', { name: 'body' }],
               ['history', 'History', { name: 'history' }],
             ] as const
           ).map(([id, label, target]) => (
@@ -155,7 +164,11 @@ export default function App() {
       </header>
       <main className={styles.main}>
         {screen.name === 'picker' && (
-          <PickerScreen weeklyGoal={settings.weeklyGoal} onSelect={(exerciseId) => setScreen({ name: 'setup', exerciseId })} />
+          <PickerScreen
+            weeklyGoal={settings.weeklyGoal}
+            onSelect={(exerciseId) => setScreen({ name: 'setup', exerciseId })}
+            onOpenBody={() => setScreen({ name: 'body' })}
+          />
         )}
 
         {screen.name === 'setup' && (
@@ -260,6 +273,8 @@ export default function App() {
             onHistory={() => setScreen({ name: 'history' })}
           />
         )}
+
+        {screen.name === 'body' && <BodyScreen />}
 
         {screen.name === 'history' && (
           <HistoryScreen

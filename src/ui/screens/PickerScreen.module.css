@@ -141,3 +141,13 @@
   border: 1px solid var(--border);
   font-size: 0.9rem;
 }
+
+.weighIn {
+  align-self: flex-start;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--warn);
+  background: rgba(251, 191, 36, 0.1);
+  color: var(--text);
+  cursor: pointer;
+}

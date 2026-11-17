@@ -59,3 +59,13 @@
   color: #666;
   font-size: 9pt;
 }
+
+.bodySection {
+  margin-top: 18pt;
+  page-break-before: auto;
+}
+
+.bodySection h2 {
+  font-size: 14pt;
+  margin: 0 0 4pt;
+}

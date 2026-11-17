@@ -4,6 +4,7 @@ import { describeStats, formatDuration, formScore, type SessionSummary } from '.
 import { ProgressChart, type ChartPoint } from '../components/ProgressChart';
 import { ProgressOverview } from '../components/ProgressOverview';
 import { PrintLog } from '../components/PrintLog';
+import { loadBody } from '../../state/body';
 import styles from './HistoryScreen.module.css';
 
 type Metric = 'total' | 'best' | 'score';
@@ -62,13 +63,13 @@ export function HistoryScreen({ onStart, onImported, weeklyGoal, onWeeklyGoalCha
 
   const onImportFile = async (file: File) => {
     try {
-      const { sessionsAdded, routinesAdded } = importBackup(await file.text());
+      const { sessionsAdded, routinesAdded, weighInsAdded } = importBackup(await file.text());
       const updated = loadHistory();
       setHistory(updated);
       if (!chartExercise && updated[0]) setChartExercise(updated[0].exerciseId);
       onImported();
       setMessage({
-        text: `Backup restored: ${sessionsAdded} workout${sessionsAdded === 1 ? '' : 's'} and ${routinesAdded} routine${routinesAdded === 1 ? '' : 's'} added.`,
+        text: `Backup restored: ${sessionsAdded} workout${sessionsAdded === 1 ? '' : 's'}, ${routinesAdded} routine${routinesAdded === 1 ? '' : 's'} and ${weighInsAdded} weigh-in${weighInsAdded === 1 ? '' : 's'} added.`,
       });
     } catch (err) {
       setMessage({ text: err instanceof Error ? err.message : 'Could not import that file.', error: true });
@@ -226,6 +227,7 @@ export function HistoryScreen({ onStart, onImported, weeklyGoal, onWeeklyGoalCha
         </ul>
 
         <PrintLog
+          body={loadBody()}
           history={shown}
           title={filter === 'all' ? 'All exercises' : (exercises.find(([id]) => id === filter)?.[1] ?? '')}
         />

@@ -1,0 +1,448 @@
+.screen,
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.card {
+  max-width: 680px;
+  padding: var(--gap-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.headRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--gap);
+  flex-wrap: wrap;
+}
+
+.headButtons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.headButtons button {
+  padding: 8px 14px;
+}
+
+.title {
+  font-size: 1.75rem;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.muted {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.error,
+.warnText {
+  color: var(--warn);
+  font-size: 0.9rem;
+}
+
+.goodText {
+  color: var(--good);
+  font-weight: 600;
+}
+
+/* unit + range toggles */
+.unitToggle,
+.rangeToggle {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.unitToggle button,
+.rangeToggle button {
+  min-width: 44px;
+  min-height: 32px;
+  padding: 2px 12px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.unitActive {
+  background: var(--primary) !important;
+  color: var(--primary-text) !important;
+  font-weight: 600;
+}
+
+/* goal setup */
+.goalTypes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (max-width: 520px) {
+  .goalTypes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.goalType {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  text-align: left;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.goalTypeActive {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.goalLabel {
+  font-weight: 600;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: var(--gap);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  min-width: 0;
+}
+
+.field input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 1rem;
+  color-scheme: dark;
+}
+
+.field input:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.feetInches {
+  display: flex;
+  gap: 8px;
+}
+
+.note {
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px dashed var(--border);
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.note strong {
+  color: var(--text);
+}
+
+.note .warnText {
+  color: var(--warn);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.linkButton {
+  margin-left: 6px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--primary);
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+/* main screen */
+.reminder {
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid var(--warn);
+}
+
+.progressCard,
+.addCard,
+.chartCard {
+  padding: var(--gap);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.progressTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.currentBig {
+  font-size: 2.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.bar {
+  height: 12px;
+  margin-top: 12px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--good);
+  transition: width 0.4s;
+}
+
+.barLabels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr));
+  gap: 10px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--gap);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.statValue {
+  font-size: 1.3rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.statHint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.addRow {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.addRow .field {
+  flex: 1;
+  min-width: 130px;
+}
+
+.addRow button {
+  min-height: 44px;
+  padding: 0 24px;
+}
+
+.chartHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.chart {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.grid {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.axis {
+  fill: var(--text-muted);
+  font-size: 12px;
+}
+
+.goalLine {
+  stroke: var(--good);
+  stroke-width: 2;
+  stroke-dasharray: 6 5;
+}
+
+.goalText {
+  fill: var(--good);
+  font-size: 12px;
+}
+
+.trendLine {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.dot {
+  fill: var(--text-muted);
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
+
+.workoutTick {
+  fill: var(--warn);
+  opacity: 0.8;
+}
+
+.legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+.legend i {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.legendTrend {
+  width: 16px;
+  height: 3px;
+  background: var(--primary);
+}
+
+.legendGoal {
+  width: 16px;
+  border-top: 2px dashed var(--good);
+}
+
+.legendWorkout {
+  width: 3px;
+  height: 10px;
+  background: var(--warn);
+}
+
+.entries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.entries li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.entryWeight {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.deleteButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.deleteButton:hover {
+  color: var(--warn);
+  border-color: var(--warn);
+}
+
+.confirm {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .card {
+    padding: var(--gap);
+  }
+  .title {
+    font-size: 1.4rem;
+  }
+  .currentBig {
+    font-size: 1.8rem;
+  }
+  .addRow button {
+    width: 100%;
+  }
+  .actions {
+    flex-direction: column-reverse;
+  }
+}

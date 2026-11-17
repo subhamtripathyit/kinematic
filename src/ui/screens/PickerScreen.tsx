@@ -2,15 +2,31 @@ import { useState } from 'react';
 import { exercisesByCategory, type Category } from '../../engine/exercises';
 import { loadHistory } from '../../state/history';
 import { currentStreak, workoutsThisWeek } from '../../state/progress';
+import { daysSinceLastWeighIn, loadBody } from '../../state/body';
 import styles from './PickerScreen.module.css';
 
 type Filter = Category | 'all';
 
-export function PickerScreen({ onSelect, weeklyGoal }: { onSelect: (exerciseId: string) => void; weeklyGoal: number }) {
+export function PickerScreen({
+  onSelect,
+  weeklyGoal,
+  onOpenBody,
+}: {
+  onSelect: (exerciseId: string) => void;
+  weeklyGoal: number;
+  onOpenBody: () => void;
+}) {
   const [filter, setFilter] = useState<Filter>('all');
   const [progress] = useState(() => {
     const history = loadHistory();
-    return { streak: currentStreak(history), week: workoutsThisWeek(history), any: history.length > 0 };
+    const body = loadBody();
+    const sinceWeighIn = body.goal ? daysSinceLastWeighIn(body) : null;
+    return {
+      streak: currentStreak(history),
+      week: workoutsThisWeek(history),
+      any: history.length > 0,
+      weighInDue: body.goal !== null && (sinceWeighIn === null || sinceWeighIn >= 7),
+    };
   });
   const groups = exercisesByCategory();
   const visible = filter === 'all' ? groups : groups.filter((g) => g.id === filter);
@@ -25,6 +41,11 @@ export function PickerScreen({ onSelect, weeklyGoal }: { onSelect: (exerciseId: 
             {progress.week >= weeklyGoal ? ' ✓' : ''}
           </span>
         </div>
+      )}
+      {progress.weighInDue && (
+        <button className={styles.weighIn} onClick={onOpenBody}>
+          ⚖️ Time for a weigh-in. Log your weight →
+        </button>
       )}
       <h1 className={styles.title}>Choose an exercise</h1>
       <p className={styles.subtitle}>

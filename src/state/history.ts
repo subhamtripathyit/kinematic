@@ -1,6 +1,7 @@
 import type { ExerciseKind } from '../engine/types';
 import { formScore, type SessionSummary } from './session';
 import { isValidRoutine, loadCustomRoutines, saveCustomRoutines, type Routine } from './routines';
+import { loadBody, mergeBody, saveBody, type BodyData } from './body';
 
 /**
  * Workout history, saved in the browser (localStorage) on this laptop only.
@@ -95,6 +96,8 @@ interface Backup {
   exportedAt: string;
   history: SessionSummary[];
   routines: Routine[];
+  /** body weight goal + weigh-ins (added later; older backups don't have it) */
+  body?: BodyData;
 }
 
 /** Full backup (history + your routines) as JSON text. Can be imported again. */
@@ -105,12 +108,13 @@ export function exportBackup(): string {
     exportedAt: new Date().toISOString(),
     history: loadHistory(),
     routines: loadCustomRoutines(),
+    body: loadBody(),
   };
   return JSON.stringify(backup, null, 2);
 }
 
 /** Restores a backup. Merges with what's already here: nothing is deleted, duplicates are skipped. */
-export function importBackup(text: string): { sessionsAdded: number; routinesAdded: number } {
+export function importBackup(text: string): { sessionsAdded: number; routinesAdded: number; weighInsAdded: number } {
   let data: Partial<Backup>;
   try {
     data = JSON.parse(text) as Partial<Backup>;
@@ -134,7 +138,10 @@ export function importBackup(text: string): { sessionsAdded: number; routinesAdd
   );
   if (newRoutines.length) saveCustomRoutines([...routines, ...newRoutines]);
 
-  return { sessionsAdded: incoming.length, routinesAdded: newRoutines.length };
+  const body = mergeBody(loadBody(), data.body);
+  if (body.added > 0 || (body.data.goal && !loadBody().goal)) saveBody(body.data);
+
+  return { sessionsAdded: incoming.length, routinesAdded: newRoutines.length, weighInsAdded: body.added };
 }
 
 /** One row per set, for Excel / Google Sheets. */
