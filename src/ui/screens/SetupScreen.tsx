@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { CATEGORIES, getExercise, isHold } from '../../engine/exercises';
 import type { WorkoutPlan } from '../../state/workoutSession';
+import type { CameraFacing } from '../../engine/camera';
+import { CameraPicker } from '../components/CameraPicker';
+import { FormDemo } from '../demo/FormDemo';
 import styles from './SetupScreen.module.css';
 
 interface Props {
@@ -9,6 +12,8 @@ interface Props {
   voiceEnabled: boolean;
   voiceSupported: boolean;
   onToggleVoice: () => void;
+  camera: CameraFacing;
+  onCameraChange: (camera: CameraFacing) => void;
   onStart: (plan: WorkoutPlan) => void;
   onBack: () => void;
 }
@@ -16,7 +21,17 @@ interface Props {
 const REST_OPTIONS = [0, 30, 45, 60, 90, 120, 180];
 
 /** Choose sets, target and rest before starting. */
-export function SetupScreen({ exerciseId, initialPlan, voiceEnabled, voiceSupported, onToggleVoice, onStart, onBack }: Props) {
+export function SetupScreen({
+  exerciseId,
+  initialPlan,
+  voiceEnabled,
+  voiceSupported,
+  onToggleVoice,
+  camera,
+  onCameraChange,
+  onStart,
+  onBack,
+}: Props) {
   const exercise = getExercise(exerciseId);
   const hold = isHold(exercise);
   const category = CATEGORIES.find((c) => c.id === exercise.category)?.label;
@@ -26,6 +41,7 @@ export function SetupScreen({ exerciseId, initialPlan, voiceEnabled, voiceSuppor
   const [target, setTarget] = useState(String(initialPlan.target));
   const [rest, setRest] = useState(initialPlan.restSec);
   const [error, setError] = useState<string | null>(null);
+  const [showDemo, setShowDemo] = useState(false);
 
   const limits = hold ? { min: 5, max: 600 } : { min: 1, max: 100 };
 
@@ -61,7 +77,12 @@ export function SetupScreen({ exerciseId, initialPlan, voiceEnabled, voiceSuppor
         </p>
         <h1 className={styles.title}>{exercise.name}</h1>
         <p className={styles.hint}>{exercise.setupHint}</p>
+        <button className={styles.demoButton} onClick={() => setShowDemo((v) => !v)} aria-expanded={showDemo}>
+          {showDemo ? 'Hide demo' : 'How to do it'}
+        </button>
       </div>
+
+      {showDemo && <FormDemo exerciseId={exerciseId} speakOnOpen={voiceEnabled && voiceSupported} />}
 
       <div className={styles.modes} role="radiogroup" aria-label="Workout type">
         <button
@@ -135,6 +156,8 @@ export function SetupScreen({ exerciseId, initialPlan, voiceEnabled, voiceSuppor
         </label>
       </div>
       )}
+
+      <CameraPicker value={camera} onChange={onCameraChange} />
 
       <label className={styles.toggle}>
         <input type="checkbox" checked={voiceEnabled && voiceSupported} disabled={!voiceSupported} onChange={onToggleVoice} />

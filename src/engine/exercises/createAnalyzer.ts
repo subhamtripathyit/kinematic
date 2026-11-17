@@ -8,6 +8,7 @@ import type {
   Landmark,
 } from '../types';
 import { FeedbackGate } from '../feedback';
+import { facingCameraFeedback, outOfFrameFeedback } from '../frameCheck';
 import { Smoother, isVisible, pickSide } from '../geometry';
 import { sideJoints, type Joints, type Side } from '../landmarks';
 import { RepCounter, type RepCounterConfig, type RepPhase } from '../repCounter';
@@ -96,11 +97,6 @@ export function exerciseKind(def: ExerciseDefinition): ExerciseKind {
 const GOOD_REP: Feedback = { id: 'good-rep', message: 'Good rep!', level: 'good' };
 const TOO_FAST: Feedback = { id: 'too-fast', message: 'Slow down', level: 'warn' };
 const HOLDING: Feedback = { id: 'holding', message: 'Hold it, looking good', level: 'good' };
-const OUT_OF_FRAME: Feedback = {
-  id: 'out-of-frame',
-  message: 'Step back so your whole body is visible',
-  level: 'info',
-};
 
 export function emptyStats(): ExerciseStats {
   return { reps: 0, goodReps: 0, partialReps: 0, holdMs: 0, positionMs: 0, tutMs: 0, formScores: [], mistakes: {} };
@@ -174,15 +170,16 @@ function createRepAnalyzer(def: RepDefinition): ExerciseAnalyzer {
 
     update(frame) {
       const now = frame?.timestamp ?? performance.now();
-      if (!frame) return result(gate.update(OUT_OF_FRAME, now), false, null);
+      if (!frame) return result(gate.update(outOfFrameFeedback(null, []), now), false, null);
 
       const lms = frame.landmarks;
       // Only switch body side between reps, so the angle doesn't jump mid-rep.
       if (counter.phase === 'rest') side = pickSide(lms);
       const joints = sideJoints(side);
+      const required = def.requiredJoints.map((j) => joints[j]);
 
-      if (!isVisible(lms, def.requiredJoints.map((j) => joints[j]))) {
-        return result(gate.update(OUT_OF_FRAME, now), false, null);
+      if (!isVisible(lms, required)) {
+        return result(gate.update(outOfFrameFeedback(lms, required), now), false, null);
       }
 
       const value = smoother.next(def.measure(lms, joints, frame.aspect));
@@ -228,8 +225,11 @@ function createRepAnalyzer(def: RepDefinition): ExerciseAnalyzer {
 
       const ctx: FrameContext = { lms, joints, aspect: frame.aspect, value, phase: counter.phase };
       const failed = def.checks.find((c) => c.phases.includes(counter.phase) && c.isWrong(ctx));
+      // Between reps, remind side-view exercises to stand side-on.
+      const framing =
+        !failed && counter.phase === 'rest' && def.cameraView === 'side' ? facingCameraFeedback(lms, frame.aspect) : null;
       const shown = gate.update(
-        failed ? { id: failed.id, message: failed.message, level: 'warn' } : null,
+        failed ? { id: failed.id, message: failed.message, level: 'warn' } : framing,
         now,
       );
       // A mistake only counts against the rep once it was actually shown (lasted several frames).
@@ -303,17 +303,18 @@ function createHoldAnalyzer(def: HoldDefinition): ExerciseAnalyzer {
       if (!frame) {
         wasHolding = false;
         wasInPosition = false;
-        return result(show(OUT_OF_FRAME, now), false, null, false);
+        return result(show(outOfFrameFeedback(null, []), now), false, null, false);
       }
 
       const lms = frame.landmarks;
       if (!wasHolding) side = pickSide(lms);
       const joints = sideJoints(side);
 
-      if (!isVisible(lms, def.requiredJoints.map((j) => joints[j]))) {
+      const required = def.requiredJoints.map((j) => joints[j]);
+      if (!isVisible(lms, required)) {
         wasHolding = false;
         wasInPosition = false;
-        return result(show(OUT_OF_FRAME, now), false, null, false);
+        return result(show(outOfFrameFeedback(lms, required), now), false, null, false);
       }
 
       const value = smoother.next(def.measure(lms, joints, frame.aspect));
@@ -322,7 +323,8 @@ function createHoldAnalyzer(def: HoldDefinition): ExerciseAnalyzer {
       if (!def.inPosition(ctx)) {
         wasHolding = false;
         wasInPosition = false;
-        return result(show(notInPosition, now), true, value, false);
+        const framing = def.cameraView === 'side' ? facingCameraFeedback(lms, frame.aspect) : null;
+        return result(show(framing ?? notInPosition, now), true, value, false);
       }
       if (wasInPosition) stats.positionMs += dt;
       wasInPosition = true;

@@ -1,4 +1,7 @@
 import { formScore, describePlan, describeStats, formatDuration, hasProgress, type SessionSummary } from '../../state/session';
+import type { Badge } from '../../state/badges';
+import { Celebrations } from '../components/Celebrations';
+import { ShareButton } from '../share/ShareButton';
 import styles from './SummaryScreen.module.css';
 
 interface Props {
@@ -8,9 +11,20 @@ interface Props {
   completed: boolean;
   onDone: () => void;
   onHistory: () => void;
+  newBadges?: Badge[];
+  streak?: number;
 }
 
-export function RoutineSummaryScreen({ routineName, totalExercises, results, completed, onDone, onHistory }: Props) {
+export function RoutineSummaryScreen({
+  routineName,
+  totalExercises,
+  results,
+  completed,
+  onDone,
+  onHistory,
+  newBadges = [],
+  streak = 0,
+}: Props) {
   const done = results.filter((r) => hasProgress(r.totals));
   const totalSec = results.reduce((sum, r) => sum + r.durationSec, 0);
   const scores = done.map((r) => formScore(r.kind, r.totals)).filter((s): s is number => s !== null);
@@ -35,6 +49,8 @@ export function RoutineSummaryScreen({ routineName, totalExercises, results, com
         </p>
       </div>
 
+      <Celebrations badges={newBadges} streak={streak} />
+
       <div className={styles.stats}>
         <div className={styles.stat}>
           <span className={styles.value}>{done.length}</span>
@@ -51,6 +67,7 @@ export function RoutineSummaryScreen({ routineName, totalExercises, results, com
       </div>
 
       {results.length > 0 && (
+        <div className="table-scroll">
         <table className={styles.table}>
           <thead>
             <tr>
@@ -71,6 +88,7 @@ export function RoutineSummaryScreen({ routineName, totalExercises, results, com
             ))}
           </tbody>
         </table>
+        </div>
       )}
 
       <div className={styles.actions}>
@@ -80,6 +98,23 @@ export function RoutineSummaryScreen({ routineName, totalExercises, results, com
         <button className="btn-secondary" onClick={onHistory}>
           See history
         </button>
+        {done.length > 0 && (
+          <ShareButton
+            filename="kinematic-routine.png"
+            card={{
+              title: routineName,
+              subtitle: completed ? 'Routine complete' : 'Routine',
+              bigValue: `${done.length}/${totalExercises}`,
+              bigLabel: 'exercises done',
+              stats: [
+                { label: 'Avg form score', value: avgScore === null ? '–' : String(avgScore) },
+                { label: 'Exercise time', value: formatDuration(totalSec) },
+                { label: 'Day streak', value: String(streak) },
+              ],
+              highlight: newBadges[0] ? `Badge: ${newBadges[0].name}` : undefined,
+            }}
+          />
+        )}
       </div>
     </section>
   );

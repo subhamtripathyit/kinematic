@@ -56,6 +56,16 @@ export interface PersonalBest {
   date: string;
 }
 
+/** Best single set so far for one exercise: reps, or hold time in ms. 0 if never done. */
+export function bestSetValue(history: SessionSummary[], exerciseId: string): number {
+  let best = 0;
+  for (const h of history) {
+    if (h.exerciseId !== exerciseId) continue;
+    for (const s of h.sets) best = Math.max(best, h.kind === 'hold' ? s.stats.holdMs : s.stats.reps);
+  }
+  return best;
+}
+
 /** Best single set per exercise. */
 export function personalBests(history: SessionSummary[]): PersonalBest[] {
   const bests = new Map<string, PersonalBest>();

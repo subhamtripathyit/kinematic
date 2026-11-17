@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { exerciseKind, getExercise } from '../../engine/exercises';
 import { VoiceCoach } from '../../engine/voice';
+import type { CameraFacing } from '../../engine/camera';
+import { CameraPicker } from '../components/CameraPicker';
 import type { Routine } from '../../state/routines';
 import { buildSummary, describePlan, formatDuration, hasProgress, type SessionSummary } from '../../state/session';
+import { bestSetValue, loadHistory } from '../../state/history';
 import { WorkoutScreen } from './WorkoutScreen';
 import styles from './RoutineRunner.module.css';
 
@@ -11,13 +14,24 @@ interface Props {
   voiceEnabled: boolean;
   voiceSupported: boolean;
   onToggleVoice: () => void;
+  camera: CameraFacing;
+  onCameraChange: (camera: CameraFacing) => void;
   /** called after each exercise with progress, so it's saved even if the routine is stopped early */
   onExerciseDone: (summary: SessionSummary) => void;
   onFinish: (results: SessionSummary[], completed: boolean) => void;
 }
 
 /** Runs a routine: up-next screen -> exercise -> up-next -> exercise ... */
-export function RoutineRunner({ routine, voiceEnabled, voiceSupported, onToggleVoice, onExerciseDone, onFinish }: Props) {
+export function RoutineRunner({
+  routine,
+  voiceEnabled,
+  voiceSupported,
+  onToggleVoice,
+  camera,
+  onCameraChange,
+  onExerciseDone,
+  onFinish,
+}: Props) {
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<'up-next' | 'working'>('up-next');
   const [results, setResults] = useState<SessionSummary[]>([]);
@@ -53,6 +67,8 @@ export function RoutineRunner({ routine, voiceEnabled, voiceSupported, onToggleV
         voiceEnabled={voiceEnabled}
         voiceSupported={voiceSupported}
         onToggleVoice={onToggleVoice}
+        camera={camera}
+        onCameraChange={onCameraChange}
         onStart={() => setPhase('working')}
         onSkip={() => goNext(results)}
         onEnd={() => onFinish(results, false)}
@@ -65,9 +81,11 @@ export function RoutineRunner({ routine, voiceEnabled, voiceSupported, onToggleV
       key={`${routine.id}-${index}`}
       exerciseId={step.exerciseId}
       plan={step.plan}
+      camera={camera}
       voiceEnabled={voiceEnabled}
       voiceSupported={voiceSupported}
       onToggleVoice={onToggleVoice}
+      previousBest={bestSetValue(loadHistory(), step.exerciseId)}
       contextLabel={`${routine.name} · exercise ${index + 1} of ${total}`}
       endLabel={index + 1 >= total ? 'Finish routine' : 'Finish exercise'}
       backLabel="End routine"
@@ -96,12 +114,26 @@ interface UpNextProps {
   voiceEnabled: boolean;
   voiceSupported: boolean;
   onToggleVoice: () => void;
+  camera: CameraFacing;
+  onCameraChange: (camera: CameraFacing) => void;
   onStart: () => void;
   onSkip: () => void;
   onEnd: () => void;
 }
 
-function UpNext({ routine, index, voice, voiceEnabled, voiceSupported, onToggleVoice, onStart, onSkip, onEnd }: UpNextProps) {
+function UpNext({
+  routine,
+  index,
+  voice,
+  voiceEnabled,
+  voiceSupported,
+  onToggleVoice,
+  camera,
+  onCameraChange,
+  onStart,
+  onSkip,
+  onEnd,
+}: UpNextProps) {
   const step = routine.steps[index];
   const def = getExercise(step.exerciseId);
   const kind = exerciseKind(def);
@@ -164,6 +196,7 @@ function UpNext({ routine, index, voice, voiceEnabled, voiceSupported, onToggleV
         {kind === 'hold' ? ' (timed)' : ' reps'} · {step.plan.restSec}s rest between sets
       </p>
       <p className={styles.muted}>{def.setupHint}</p>
+      {isFirst && <CameraPicker value={camera} onChange={onCameraChange} />}
 
       {autoStart && (
         <div className={styles.countdown}>

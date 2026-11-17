@@ -6,6 +6,9 @@ import {
   sortedMistakes,
   type SessionSummary,
 } from '../../state/session';
+import type { Badge } from '../../state/badges';
+import { Celebrations } from '../components/Celebrations';
+import { ShareButton } from '../share/ShareButton';
 import styles from './SummaryScreen.module.css';
 
 interface Props {
@@ -14,14 +17,34 @@ interface Props {
   onAgain: () => void;
   onPickAnother: () => void;
   onHistory: () => void;
+  /** best single set before this workout (reps or hold ms) */
+  previousBest?: number;
+  newBadges?: Badge[];
+  streak?: number;
 }
 
-export function SummaryScreen({ summary, saved, onAgain, onPickAnother, onHistory }: Props) {
+export function SummaryScreen({
+  summary,
+  saved,
+  onAgain,
+  onPickAnother,
+  onHistory,
+  previousBest = 0,
+  newBadges = [],
+  streak = 0,
+}: Props) {
   const { totals, kind, sets } = summary;
   const hold = kind === 'hold';
   const mistakes = sortedMistakes(totals);
   const score = formScore(kind, totals);
   const tempo = avgRepSeconds(totals);
+  const bestThisTime = Math.max(0, ...sets.map((s) => (hold ? s.stats.holdMs : s.stats.reps)));
+  const isPersonalBest = saved && previousBest > 0 && bestThisTime > previousBest;
+  const pbText = isPersonalBest
+    ? hold
+      ? `${formatDuration(bestThisTime / 1000)} hold (was ${formatDuration(previousBest / 1000)})`
+      : `${bestThisTime} reps in one set (was ${previousBest})`
+    : undefined;
 
   return (
     <section className={styles.card}>
@@ -41,6 +64,8 @@ export function SummaryScreen({ summary, saved, onAgain, onPickAnother, onHistor
           )}
         </p>
       </div>
+
+      <Celebrations personalBest={pbText} badges={newBadges} streak={streak} />
 
       <div className={styles.stats}>
         {hold ? (
@@ -64,6 +89,7 @@ export function SummaryScreen({ summary, saved, onAgain, onPickAnother, onHistor
       {sets.length > 0 && (
         <div>
           <h2 className={styles.subtitle}>Sets</h2>
+          <div className="table-scroll">
           <table className={styles.table}>
             <thead>
               <tr>
@@ -86,6 +112,7 @@ export function SummaryScreen({ summary, saved, onAgain, onPickAnother, onHistor
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
@@ -112,6 +139,23 @@ export function SummaryScreen({ summary, saved, onAgain, onPickAnother, onHistor
         <button className="btn-secondary" onClick={onPickAnother}>
           Choose another exercise
         </button>
+        {saved && (
+          <ShareButton
+            filename={`kinematic-${summary.exerciseId}.png`}
+            card={{
+              title: summary.exerciseName,
+              subtitle: summary.plan.mode === 'free' ? 'Free workout' : `${sets.length} sets`,
+              bigValue: hold ? formatDuration(totals.holdMs / 1000) : String(totals.reps),
+              bigLabel: hold ? 'held with good form' : 'reps',
+              stats: [
+                { label: 'Form score', value: score === null ? '–' : String(score) },
+                { label: 'Sets', value: String(sets.length) },
+                { label: 'Day streak', value: String(streak) },
+              ],
+              highlight: isPersonalBest ? 'New personal best!' : newBadges[0] ? `Badge: ${newBadges[0].name}` : undefined,
+            }}
+          />
+        )}
       </div>
     </section>
   );

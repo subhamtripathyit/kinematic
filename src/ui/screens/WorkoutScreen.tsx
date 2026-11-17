@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { startCamera, stopCamera } from '../../engine/camera';
+import { startCamera, stopCamera, type CameraFacing } from '../../engine/camera';
 import { createPoseEngine, type PoseEngine } from '../../engine/pose';
 import { drawSkeleton } from '../../engine/drawing';
 import { createAnalyzer, getExercise, isHold } from '../../engine/exercises';
@@ -16,6 +16,8 @@ import styles from './WorkoutScreen.module.css';
 interface Props {
   exerciseId: string;
   plan: WorkoutPlan;
+  /** front (mirrored, like a mirror) or back camera (not mirrored) */
+  camera?: CameraFacing;
   voiceEnabled: boolean;
   voiceSupported: boolean;
   onToggleVoice: () => void;
@@ -27,6 +29,8 @@ interface Props {
   endLabel?: string;
   /** Label for the back link (default "Change settings") */
   backLabel?: string;
+  /** best single set before this workout (reps, or hold ms); 0 = never done */
+  previousBest?: number;
 }
 
 interface Details {
@@ -56,6 +60,7 @@ interface Actions {
 export function WorkoutScreen({
   exerciseId,
   plan,
+  camera = 'user',
   voiceEnabled,
   voiceSupported,
   onToggleVoice,
@@ -64,6 +69,7 @@ export function WorkoutScreen({
   contextLabel,
   endLabel = 'End workout',
   backLabel = 'Change settings',
+  previousBest = 0,
 }: Props) {
   const exercise = getExercise(exerciseId);
   const hold = isHold(exercise);
@@ -84,6 +90,9 @@ export function WorkoutScreen({
   const [count, setCount] = useState(0);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [inFrame, setInFrame] = useState(true);
+  /** shape of the camera picture, so the video box matches it (portrait on phones) */
+  const [videoAspect, setVideoAspect] = useState<string | null>(null);
+  const [pbBanner, setPbBanner] = useState(false);
   const [view, setView] = useState<SessionView>({ phase: 'working', set: 1, restRemaining: 0 });
 
   const [showMore, setShowMore] = useState(false);
@@ -136,6 +145,8 @@ export function WorkoutScreen({
     let shownInFrame: boolean | null = null;
     let shownRest = -1;
     let shownDetailsKey = '';
+    let pbAnnounced = false;
+    let pbTimer = 0;
 
     // Frame-rate counter and debug panel throttle.
     let fpsFrames = 0;
@@ -222,6 +233,7 @@ export function WorkoutScreen({
       if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
+        setVideoAspect(`${video.videoWidth} / ${video.videoHeight}`);
       }
 
       let frame: PoseFrame | null = null;
@@ -279,6 +291,15 @@ export function WorkoutScreen({
         });
       }
 
+      // New personal best: beat your best single set (only once per workout, and not on your first try).
+      const setValue = hold ? result.stats.holdMs : result.stats.reps;
+      if (!pbAnnounced && previousBest > 0 && setValue > previousBest) {
+        pbAnnounced = true;
+        voice.say('New personal best!');
+        setPbBanner(true);
+        pbTimer = window.setTimeout(() => setPbBanner(false), 4000);
+      }
+
       const feedbackId = result.feedback?.id ?? null;
       if (feedbackId !== shownFeedbackId) {
         shownFeedbackId = feedbackId;
@@ -305,7 +326,7 @@ export function WorkoutScreen({
       try {
         const video = videoRef.current;
         if (!video) return;
-        stream = await startCamera(video);
+        stream = await startCamera(video, camera);
         if (cancelled) return stopCamera(stream);
 
         const created = await createPoseEngine();
@@ -334,17 +355,22 @@ export function WorkoutScreen({
       stopCamera(stream);
       stream = null;
       actionsRef.current = null;
+      window.clearTimeout(pbTimer);
     };
-  }, [exerciseId, plan, hold, voice]);
+  }, [exerciseId, plan, hold, voice, camera, previousBest]);
 
   const running = status === 'running';
   const resting = running && view.phase === 'resting';
 
   return (
     <div className={styles.layout}>
-      <section className={`${styles.stage} ${running && !resting && !inFrame ? styles.outOfFrame : ''}`}>
-        <video ref={videoRef} className={styles.media} playsInline muted />
-        <canvas ref={canvasRef} className={styles.media} />
+      <section
+        className={`${styles.stage} ${running && !resting && !inFrame ? styles.outOfFrame : ''}`}
+        style={videoAspect ? { aspectRatio: videoAspect } : undefined}
+      >
+        <video ref={videoRef} className={`${styles.media} ${camera === 'user' ? styles.mirrored : ''}`} playsInline muted />
+        <canvas ref={canvasRef} className={`${styles.media} ${camera === 'user' ? styles.mirrored : ''}`} />
+        {pbBanner && <div className={styles.pbBanner}>New personal best!</div>}
         {status !== 'error' && voiceSupported && (
           <button
             className={`${styles.muteButton} ${voiceEnabled ? '' : styles.muted}`}

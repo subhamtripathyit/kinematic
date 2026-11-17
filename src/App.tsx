@@ -10,7 +10,9 @@ import { RoutineEditor } from './ui/screens/RoutineEditor';
 import { RoutineRunner } from './ui/screens/RoutineRunner';
 import { RoutineSummaryScreen } from './ui/screens/RoutineSummaryScreen';
 import { buildSummary, hasProgress, type SessionSummary } from './state/session';
-import { saveSession } from './state/history';
+import { bestSetValue, loadHistory, saveSession } from './state/history';
+import { computeBadges, newlyEarned, type Badge } from './state/badges';
+import { currentStreak } from './state/progress';
 import { loadSettings, saveSettings, type Settings } from './state/settings';
 import { BUILT_IN_ROUTINES, loadCustomRoutines, newRoutineId, saveCustomRoutines, type Routine } from './state/routines';
 import { defaultPlan, type SetResult, type WorkoutPlan } from './state/workoutSession';
@@ -19,12 +21,26 @@ import styles from './App.module.css';
 type Screen =
   | { name: 'picker' }
   | { name: 'setup'; exerciseId: string }
-  | { name: 'workout'; exerciseId: string; plan: WorkoutPlan }
-  | { name: 'summary'; summary: SessionSummary; saved: boolean }
+  | { name: 'workout'; exerciseId: string; plan: WorkoutPlan; previousBest: number }
+  | {
+      name: 'summary';
+      summary: SessionSummary;
+      saved: boolean;
+      previousBest: number;
+      newBadges: Badge[];
+      streak: number;
+    }
   | { name: 'routines' }
   | { name: 'routine-edit'; routine: Routine }
-  | { name: 'routine-run'; routine: Routine }
-  | { name: 'routine-summary'; routine: Routine; results: SessionSummary[]; completed: boolean }
+  | { name: 'routine-run'; routine: Routine; badgesBefore: Badge[] }
+  | {
+      name: 'routine-summary';
+      routine: Routine;
+      results: SessionSummary[];
+      completed: boolean;
+      newBadges: Badge[];
+      streak: number;
+    }
   | { name: 'history' };
 
 type Tab = 'exercises' | 'routines' | 'history';
@@ -57,15 +73,33 @@ export default function App() {
   // ---- single exercise ----
   const startWorkout = (exerciseId: string, plan: WorkoutPlan) => {
     updateSettings({ plans: { ...settings.plans, [exerciseId]: plan } });
-    setScreen({ name: 'workout', exerciseId, plan });
+    setScreen({ name: 'workout', exerciseId, plan, previousBest: bestSetValue(loadHistory(), exerciseId) });
   };
 
-  const finishWorkout = (exerciseId: string, plan: WorkoutPlan, sets: SetResult[], startedAt: number) => {
+  const finishWorkout = (
+    exerciseId: string,
+    plan: WorkoutPlan,
+    sets: SetResult[],
+    startedAt: number,
+    previousBest: number,
+  ) => {
     const def = getExercise(exerciseId);
     const summary = buildSummary({ id: def.id, name: def.name, kind: exerciseKind(def) }, plan, startedAt, sets);
+    const badgesBefore = computeBadges(loadHistory());
     const saved = hasProgress(summary.totals) ? saveSession(summary) : false;
-    setScreen({ name: 'summary', summary, saved });
+    const after = loadHistory();
+    setScreen({
+      name: 'summary',
+      summary,
+      saved,
+      previousBest,
+      newBadges: newlyEarned(badgesBefore, computeBadges(after)),
+      streak: currentStreak(after),
+    });
   };
+
+  const startRoutine = (routine: Routine) =>
+    setScreen({ name: 'routine-run', routine, badgesBefore: computeBadges(loadHistory()) });
 
   // ---- routines ----
   const storeRoutines = (list: Routine[]) => {
@@ -120,7 +154,9 @@ export default function App() {
         </nav>
       </header>
       <main className={styles.main}>
-        {screen.name === 'picker' && <PickerScreen onSelect={(exerciseId) => setScreen({ name: 'setup', exerciseId })} />}
+        {screen.name === 'picker' && (
+          <PickerScreen weeklyGoal={settings.weeklyGoal} onSelect={(exerciseId) => setScreen({ name: 'setup', exerciseId })} />
+        )}
 
         {screen.name === 'setup' && (
           <SetupScreen
@@ -130,6 +166,8 @@ export default function App() {
             voiceEnabled={settings.voiceEnabled}
             voiceSupported={voiceSupported}
             onToggleVoice={toggleVoice}
+            camera={settings.camera}
+            onCameraChange={(camera) => updateSettings({ camera })}
             onBack={() => setScreen({ name: 'picker' })}
             onStart={(plan) => startWorkout(screen.exerciseId, plan)}
           />
@@ -140,11 +178,15 @@ export default function App() {
             key={screen.exerciseId}
             exerciseId={screen.exerciseId}
             plan={screen.plan}
+            camera={settings.camera}
+            previousBest={screen.previousBest}
             voiceEnabled={settings.voiceEnabled}
             voiceSupported={voiceSupported}
             onToggleVoice={toggleVoice}
             onBack={() => setScreen({ name: 'setup', exerciseId: screen.exerciseId })}
-            onFinish={(sets, startedAt) => finishWorkout(screen.exerciseId, screen.plan, sets, startedAt)}
+            onFinish={(sets, startedAt) =>
+              finishWorkout(screen.exerciseId, screen.plan, sets, startedAt, screen.previousBest)
+            }
           />
         )}
 
@@ -152,6 +194,9 @@ export default function App() {
           <SummaryScreen
             summary={screen.summary}
             saved={screen.saved}
+            previousBest={screen.previousBest}
+            newBadges={screen.newBadges}
+            streak={screen.streak}
             onAgain={() => setScreen({ name: 'setup', exerciseId: screen.summary.exerciseId })}
             onPickAnother={() => setScreen({ name: 'picker' })}
             onHistory={() => setScreen({ name: 'history' })}
@@ -162,7 +207,7 @@ export default function App() {
           <RoutinesScreen
             builtIn={BUILT_IN_ROUTINES}
             custom={customRoutines}
-            onStart={(routine) => setScreen({ name: 'routine-run', routine })}
+            onStart={startRoutine}
             onNew={() => setScreen({ name: 'routine-edit', routine: { ...EMPTY_ROUTINE } })}
             onEdit={(routine) => setScreen({ name: 'routine-edit', routine })}
             onCopy={copyRoutine}
@@ -186,10 +231,20 @@ export default function App() {
             voiceEnabled={settings.voiceEnabled}
             voiceSupported={voiceSupported}
             onToggleVoice={toggleVoice}
+            camera={settings.camera}
+            onCameraChange={(camera) => updateSettings({ camera })}
             onExerciseDone={(summary) => saveSession(summary)}
-            onFinish={(results, completed) =>
-              setScreen({ name: 'routine-summary', routine: screen.routine, results, completed })
-            }
+            onFinish={(results, completed) => {
+              const after = loadHistory();
+              setScreen({
+                name: 'routine-summary',
+                routine: screen.routine,
+                results,
+                completed,
+                newBadges: newlyEarned(screen.badgesBefore, computeBadges(after)),
+                streak: currentStreak(after),
+              });
+            }}
           />
         )}
 
@@ -199,13 +254,20 @@ export default function App() {
             totalExercises={screen.routine.steps.length}
             results={screen.results}
             completed={screen.completed}
+            newBadges={screen.newBadges}
+            streak={screen.streak}
             onDone={() => setScreen({ name: 'routines' })}
             onHistory={() => setScreen({ name: 'history' })}
           />
         )}
 
         {screen.name === 'history' && (
-          <HistoryScreen onStart={() => setScreen({ name: 'picker' })} onImported={() => setCustomRoutines(loadCustomRoutines())} />
+          <HistoryScreen
+            onStart={() => setScreen({ name: 'picker' })}
+            onImported={() => setCustomRoutines(loadCustomRoutines())}
+            weeklyGoal={settings.weeklyGoal}
+            onWeeklyGoalChange={(weeklyGoal) => updateSettings({ weeklyGoal })}
+          />
         )}
       </main>
     </div>

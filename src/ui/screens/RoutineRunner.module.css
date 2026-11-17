@@ -89,3 +89,15 @@
   text-decoration: underline;
   cursor: pointer;
 }
+
+@media (max-width: 600px) {
+  .card {
+    padding: var(--gap);
+  }
+  .title {
+    font-size: 1.75rem;
+  }
+  .actions {
+    flex-direction: column;
+  }
+}

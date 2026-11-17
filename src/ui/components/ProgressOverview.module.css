@@ -1,0 +1,153 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-lg);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  gap: 12px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--gap);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.big {
+  font-size: 1.9rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.label {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.goal select {
+  padding: 1px 4px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+
+.progress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--good);
+  border-radius: 999px;
+  transition: width 0.3s;
+}
+
+.done {
+  color: var(--good);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.heatWrap {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.dayLabels {
+  display: grid;
+  grid-template-rows: repeat(7, 16px);
+  gap: 4px;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  line-height: 16px;
+}
+
+.heat {
+  display: flex;
+  gap: 4px;
+}
+
+.col {
+  display: grid;
+  grid-template-rows: repeat(7, 16px);
+  gap: 4px;
+}
+
+.cell {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: var(--surface-2);
+}
+
+.cell[data-level='1'] {
+  background: rgba(74, 222, 128, 0.4);
+}
+
+.cell[data-level='2'] {
+  background: rgba(74, 222, 128, 0.7);
+}
+
+.cell[data-level='3'] {
+  background: var(--good);
+}
+
+.future {
+  opacity: 0.25;
+}
+
+.badges {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr));
+  gap: 10px;
+}
+
+.badge {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  border-radius: var(--radius);
+  border: 1px dashed var(--border);
+  opacity: 0.55;
+}
+
+.earned {
+  opacity: 1;
+  border: 1px solid var(--good);
+  background: rgba(74, 222, 128, 0.08);
+}
+
+.badgeIcon {
+  font-size: 1.4rem;
+  color: var(--good);
+}
+
+.badgeName {
+  font-weight: 600;
+}
+
+.badgeDesc {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}

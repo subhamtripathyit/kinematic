@@ -2,6 +2,8 @@ import { useMemo, useRef, useState } from 'react';
 import { clearHistory, exportBackup, exportCsv, importBackup, loadHistory, personalBests } from '../../state/history';
 import { describeStats, formatDuration, formScore, type SessionSummary } from '../../state/session';
 import { ProgressChart, type ChartPoint } from '../components/ProgressChart';
+import { ProgressOverview } from '../components/ProgressOverview';
+import { PrintLog } from '../components/PrintLog';
 import styles from './HistoryScreen.module.css';
 
 type Metric = 'total' | 'best' | 'score';
@@ -10,6 +12,8 @@ interface Props {
   onStart: () => void;
   /** called after a backup is imported (routines may have changed) */
   onImported: () => void;
+  weeklyGoal: number;
+  onWeeklyGoalChange: (goal: number) => void;
 }
 
 function download(filename: string, text: string, type: string) {
@@ -26,7 +30,7 @@ function download(filename: string, text: string, type: string) {
 const today = () => new Date().toISOString().slice(0, 10);
 
 /** Past workouts, progress chart, personal bests and backup, all saved in this browser. */
-export function HistoryScreen({ onStart, onImported }: Props) {
+export function HistoryScreen({ onStart, onImported, weeklyGoal, onWeeklyGoalChange }: Props) {
   const [history, setHistory] = useState(() => loadHistory());
   const [filter, setFilter] = useState('all');
   const [confirming, setConfirming] = useState(false);
@@ -73,6 +77,15 @@ export function HistoryScreen({ onStart, onImported }: Props) {
 
   const backupControls = (
     <div className={styles.backup}>
+      {history.length > 0 && (
+        <button
+          className="btn-primary"
+          onClick={() => window.print()}
+          title="Opens the print window: choose “Save as PDF” as the printer"
+        >
+          Download PDF
+        </button>
+      )}
       <button className="btn-secondary" onClick={() => download(`kinematic-backup-${today()}.json`, exportBackup(), 'application/json')}>
         Export backup
       </button>
@@ -126,6 +139,12 @@ export function HistoryScreen({ onStart, onImported }: Props) {
         {backupControls}
       </div>
       {message && <p className={message.error ? styles.error : styles.success}>{message.text}</p>}
+      <p className={styles.muted}>
+        <strong>Download PDF</strong> gives you a readable workout log (in the print window, pick “Save as PDF”). The
+        backup file is only for moving your data to another browser.
+      </p>
+
+      <ProgressOverview history={history} weeklyGoal={weeklyGoal} onWeeklyGoalChange={onWeeklyGoalChange} />
 
       <div>
         <div className={styles.listHeader}>
@@ -205,6 +224,11 @@ export function HistoryScreen({ onStart, onImported }: Props) {
             );
           })}
         </ul>
+
+        <PrintLog
+          history={shown}
+          title={filter === 'all' ? 'All exercises' : (exercises.find(([id]) => id === filter)?.[1] ?? '')}
+        />
 
         <div className={styles.dangerZone}>
           {confirming ? (

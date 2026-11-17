@@ -31,7 +31,7 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
   gap: var(--gap);
 }
 
@@ -94,4 +94,13 @@
   gap: 12px;
   align-items: center;
   font-size: 0.85rem;
+}
+
+@media (max-width: 600px) {
+  .card {
+    padding: var(--gap);
+  }
+  .top > button {
+    width: 100%;
+  }
 }

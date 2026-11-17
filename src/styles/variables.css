@@ -19,5 +19,15 @@
   --panel-width: 340px;
   --max-width: 1400px;
 
+  --page-pad: 24px;
   --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Phones: tighter spacing so content fits. */
+@media (max-width: 600px) {
+  :root {
+    --gap: 12px;
+    --gap-lg: 16px;
+    --page-pad: 12px;
+  }
 }

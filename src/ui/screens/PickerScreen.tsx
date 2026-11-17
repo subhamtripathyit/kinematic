@@ -1,16 +1,31 @@
 import { useState } from 'react';
 import { exercisesByCategory, type Category } from '../../engine/exercises';
+import { loadHistory } from '../../state/history';
+import { currentStreak, workoutsThisWeek } from '../../state/progress';
 import styles from './PickerScreen.module.css';
 
 type Filter = Category | 'all';
 
-export function PickerScreen({ onSelect }: { onSelect: (exerciseId: string) => void }) {
+export function PickerScreen({ onSelect, weeklyGoal }: { onSelect: (exerciseId: string) => void; weeklyGoal: number }) {
   const [filter, setFilter] = useState<Filter>('all');
+  const [progress] = useState(() => {
+    const history = loadHistory();
+    return { streak: currentStreak(history), week: workoutsThisWeek(history), any: history.length > 0 };
+  });
   const groups = exercisesByCategory();
   const visible = filter === 'all' ? groups : groups.filter((g) => g.id === filter);
 
   return (
     <section className={styles.screen}>
+      {progress.any && (
+        <div className={styles.progressChip}>
+          <span>🔥 {progress.streak}-day streak</span>
+          <span>
+            · {progress.week}/{weeklyGoal} workout days this week
+            {progress.week >= weeklyGoal ? ' ✓' : ''}
+          </span>
+        </div>
+      )}
       <h1 className={styles.title}>Choose an exercise</h1>
       <p className={styles.subtitle}>
         Kinematic counts your reps and checks your form in real time. Your video never leaves your laptop.

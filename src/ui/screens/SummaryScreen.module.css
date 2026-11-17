@@ -21,7 +21,7 @@
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(130px, 100%), 1fr));
   gap: var(--gap);
 }
 
@@ -102,4 +102,19 @@
 
 .actions button {
   flex: 1;
+}
+
+@media (max-width: 600px) {
+  .card {
+    padding: var(--gap);
+  }
+  .title {
+    font-size: 1.25rem;
+  }
+  .value {
+    font-size: 1.5rem;
+  }
+  .actions {
+    flex-direction: column;
+  }
 }
