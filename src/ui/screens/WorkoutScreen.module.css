@@ -1,0 +1,208 @@
+.layout {
+  display: grid;
+  grid-template-columns: 1fr var(--panel-width);
+  gap: var(--gap-lg);
+  align-items: start;
+}
+
+/* Ready for mobile later: panel drops below the video on narrow screens. */
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 3px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.outOfFrame {
+  border-color: var(--warn);
+}
+
+/* Video and canvas sit exactly on top of each other, mirrored like a mirror. */
+.media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scaleX(-1);
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap);
+  padding: var(--gap-lg);
+  text-align: center;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.restLabel {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.restTime {
+  font-size: 5rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.small {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  padding: var(--gap-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.title {
+  font-size: 1.5rem;
+}
+
+.setInfo {
+  color: var(--primary);
+  font-size: 0.9rem;
+}
+
+.voiceToggle {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.voiceToggle:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.voiceOn {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.hint {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.actions button {
+  flex: 1;
+}
+
+.linkButton {
+  align-self: flex-start;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.linkButton:hover {
+  color: var(--text);
+}
+
+/* Big mute button on top of the video (not mirrored). */
+.muteButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.muteButton:hover {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.muted {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+
+.keys {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.context {
+  color: var(--warn);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.details {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 12px;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  font-size: 0.9rem;
+}
+
+.details dt {
+  color: var(--text-muted);
+}
+
+.details dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

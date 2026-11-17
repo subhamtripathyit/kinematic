@@ -1,0 +1,185 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-lg);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.empty {
+  max-width: 520px;
+  margin: 48px auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--gap);
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--gap);
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 1.75rem;
+}
+
+.subtitle {
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+}
+
+.muted {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.confirm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.linkButton {
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.linkButton:hover {
+  color: var(--warn);
+}
+
+.bests {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.best {
+  display: flex;
+  flex-direction: column;
+  padding: var(--gap);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.bestValue {
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.bestName {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.listHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--gap);
+}
+
+.select {
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--gap);
+  flex-wrap: wrap;
+  padding: 14px var(--gap);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.itemMain,
+.itemStats {
+  display: flex;
+  flex-direction: column;
+}
+
+.itemStats {
+  text-align: right;
+}
+
+.itemName {
+  font-weight: 600;
+}
+
+.itemTotal {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.backup {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.backup button {
+  padding: 8px 14px;
+  font-size: 0.9rem;
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.score {
+  color: var(--good);
+  font-weight: 500;
+}
+
+.success {
+  color: var(--good);
+  font-size: 0.9rem;
+}
+
+.error {
+  color: var(--warn);
+  font-size: 0.9rem;
+}
+
+.dangerZone {
+  margin-top: var(--gap);
+}

@@ -1,0 +1,138 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: var(--gap);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  font-size: 0.9rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.heading {
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.8rem;
+}
+
+.phase {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  background: var(--surface-2);
+}
+
+.rest {
+  color: var(--text-muted);
+}
+
+.moving {
+  color: var(--warn);
+}
+
+.active {
+  color: var(--good);
+}
+
+.big {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 2.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.bigLabel {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.bar {
+  position: relative;
+  height: 10px;
+  margin: 22px 0 4px;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+
+.marker {
+  position: absolute;
+  top: -4px;
+  width: 2px;
+  height: 18px;
+  transform: translateX(-1px);
+}
+
+.markerLabel {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.m_rest {
+  background: var(--text-muted);
+}
+
+.m_start {
+  background: var(--warn);
+}
+
+.m_active {
+  background: var(--good);
+}
+
+.dot {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 2px solid var(--bg);
+  transform: translate(-50%, -50%);
+}
+
+.rule {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 12px;
+  margin: 0;
+}
+
+.grid dt {
+  color: var(--text-muted);
+}
+
+.grid dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ok {
+  color: var(--good);
+}
+
+.bad {
+  color: var(--warn);
+}

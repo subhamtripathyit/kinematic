@@ -1,0 +1,26 @@
+.box {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: var(--gap);
+  background: var(--surface-2);
+  border-radius: var(--radius);
+}
+
+.number {
+  font-size: 4rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.target {
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.label {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+}

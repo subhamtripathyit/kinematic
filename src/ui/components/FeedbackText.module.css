@@ -1,0 +1,31 @@
+.box {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  padding: var(--gap);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.empty {
+  color: var(--text-muted);
+  font-weight: 400;
+  font-size: 1rem;
+}
+
+.good {
+  color: var(--good);
+  border-color: var(--good);
+}
+
+.warn {
+  color: var(--warn);
+  border-color: var(--warn);
+}
+
+.info {
+  color: var(--info);
+  border-color: var(--info);
+}

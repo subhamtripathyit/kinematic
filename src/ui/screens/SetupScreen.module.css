@@ -1,0 +1,143 @@
+.card {
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-lg);
+  padding: var(--gap-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.eyebrow {
+  color: var(--primary);
+  font-size: 0.85rem;
+}
+
+.title {
+  font-size: 1.75rem;
+}
+
+.hint {
+  margin-top: 4px;
+  color: var(--text-muted);
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--gap);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.field input,
+.field select {
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 1.1rem;
+}
+
+.field input:focus,
+.field select:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.toggle {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.toggle input {
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  accent-color: var(--primary);
+}
+
+.toggleHint {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.error {
+  color: var(--warn);
+  font-size: 0.9rem;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.actions button {
+  flex: 1;
+}
+
+.modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 520px) {
+  .modes {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mode {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  text-align: left;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.mode:hover {
+  border-color: var(--primary);
+}
+
+.modeActive {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.modeTitle {
+  font-weight: 600;
+}
+
+.modeHint {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.freeNote {
+  color: var(--text-muted);
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  border: 1px dashed var(--border);
+}
+
+.freeNote strong {
+  color: var(--text);
+}
