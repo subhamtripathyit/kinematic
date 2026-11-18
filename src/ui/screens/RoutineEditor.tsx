@@ -3,6 +3,7 @@ import { t } from '../../i18n';
 import { exerciseKind, exercisesByCategory, getExercise } from '../../engine/exercises';
 import { newRoutineId, type Routine } from '../../state/routines';
 import styles from './RoutineEditor.module.css';
+import { charCount, clipChars } from '../../state/textLimit';
 
 interface Props {
   /** routine to edit; a new routine has no steps yet */
@@ -19,7 +20,9 @@ interface DraftStep {
   restSec: number;
 }
 
-const REST_OPTIONS = [0, 30, 45, 60, 90, 120, 180];
+const REST_OPTIONS = [0, 30, 45, 60, 90, 120, 180, 240, 300];
+const NAME_MAX = 40;
+const DESCRIPTION_MAX = 100;
 const isHoldId = (id: string) => exerciseKind(getExercise(id)) === 'hold';
 let keyCounter = 0;
 const nextKey = () => `step-${++keyCounter}`;
@@ -72,7 +75,7 @@ export function RoutineEditor({ initial, onSave, onCancel }: Props) {
   const save = () => {
     const trimmed = name.trim();
     if (!trimmed) return setError(t('Give your routine a name.'));
-    if (trimmed.length > 40) return setError(t('Keep the name under 40 characters.'));
+    if (charCount(trimmed) > NAME_MAX) return setError(t('Keep the name under 40 characters.'));
     if (steps.length === 0) return setError(t('Add at least one exercise.'));
     if (steps.length > 15) return setError(t('A routine can have at most 15 exercises.'));
 
@@ -110,13 +113,15 @@ export function RoutineEditor({ initial, onSave, onCancel }: Props) {
           <span>{t('Name')}</span>
           <input
             value={name}
-            maxLength={40}
             placeholder={t('e.g. Monday legs')}
             onChange={(e) => {
-              setName(e.target.value);
+              setName(clipChars(e.target.value, NAME_MAX));
               setError(null);
             }}
           />
+          <span className={styles.counter}>
+            {charCount(name)}/{NAME_MAX}
+          </span>
         </label>
         <label className={styles.field}>
           <span>{t('Rest between exercises')}</span>
@@ -131,7 +136,10 @@ export function RoutineEditor({ initial, onSave, onCancel }: Props) {
       </div>
       <label className={styles.field}>
         <span>{t('Description (optional)')}</span>
-        <input value={description} maxLength={100} onChange={(e) => setDescription(e.target.value)} />
+        <input value={description} onChange={(e) => setDescription(clipChars(e.target.value, DESCRIPTION_MAX))} />
+        <span className={styles.counter}>
+          {charCount(description)}/{DESCRIPTION_MAX}
+        </span>
       </label>
 
       <div className={styles.steps}>

@@ -55,6 +55,7 @@
 
 .countdown {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: 12px;
   padding: var(--gap);
@@ -100,4 +101,10 @@
   .actions {
     flex-direction: column;
   }
+}
+
+/* −10s / +10s sits at the end of the rest row */
+.countdown > :last-child {
+  margin-left: auto;
+  align-self: center;
 }

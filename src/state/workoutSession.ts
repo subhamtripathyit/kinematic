@@ -86,6 +86,13 @@ export class WorkoutSession {
     return this.startNextSet();
   }
 
+  /** Lengthen (+) or shorten (-) the rest in progress. Never past maxSec in total remaining. */
+  adjustRest(deltaSec: number, now: number, maxSec = 600): void {
+    if (this.phase !== 'resting') return;
+    const remaining = Math.max(0, this.restEndsAt - now) + deltaSec * 1000;
+    this.restEndsAt = now + Math.min(Math.max(remaining, 0), maxSec * 1000);
+  }
+
   skipRest(): SessionEvent {
     return this.phase === 'resting' ? this.startNextSet() : null;
   }

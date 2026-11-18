@@ -15,6 +15,7 @@ import { RepCounter } from '../components/RepCounter';
 import { FeedbackText } from '../components/FeedbackText';
 import { DebugPanel, type DebugSnapshot } from '../components/DebugPanel';
 import styles from './WorkoutScreen.module.css';
+import { MAX_REST_SEC, RestAdjust } from '../components/RestAdjust';
 
 interface Props {
   exerciseId: string;
@@ -66,6 +67,7 @@ interface Actions {
   finishSet: () => void;
   endWorkout: () => void;
   skipRest: () => void;
+  adjustRest: (deltaSec: number) => void;
   skipCountdown: () => void;
 }
 
@@ -271,6 +273,11 @@ export function WorkoutScreen({
       skipRest: () => {
         restSkipped = true;
         handle(session.skipRest(), performance.now());
+      },
+      adjustRest: (deltaSec) => {
+        const now = performance.now();
+        session.adjustRest(deltaSec, now, MAX_REST_SEC);
+        setView((v) => ({ ...v, restRemaining: session.restRemainingSec(now) }));
       },
       skipCountdown: () => {
         if (gate !== 'go') go();
@@ -534,6 +541,7 @@ export function WorkoutScreen({
               Next: set {view.set + 1}
               {free ? '' : ` of ${plan.sets}`}
             </p>
+            <RestAdjust onAdjust={(d) => actionsRef.current?.adjustRest(d)} />
             <button className="btn-primary" onClick={() => actionsRef.current?.skipRest()}>
               {t('Skip rest')}
             </button>

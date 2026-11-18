@@ -6,6 +6,10 @@ import { releaseMedia } from '../../engine/mediaSession';
 import type { CameraFacing } from '../../engine/camera';
 import { CameraPicker } from '../components/CameraPicker';
 import { StartPicker } from '../components/StartPicker';
+import { MAX_REST_SEC, RestAdjust } from '../components/RestAdjust';
+import { VoiceToggle } from '../components/VoiceToggle';
+import { FormDemo } from '../demo/FormDemo';
+import setupStyles from './SetupScreen.module.css';
 import type { StartMode } from '../../state/settings';
 import type { Routine } from '../../state/routines';
 import { buildSummary, describePlan, formatDuration, hasProgress, type SessionSummary } from '../../state/session';
@@ -166,6 +170,9 @@ function UpNext({
   // First exercise waits for the user; later ones start after the rest between exercises.
   const autoStart = !isFirst && routine.restBetweenSec > 0;
   const [remaining, setRemaining] = useState(routine.restBetweenSec);
+  const [showDemo, setShowDemo] = useState(false);
+  // when the rest between exercises ends; the −10s/+10s buttons move it
+  const endsAtRef = useRef(0);
   const onStartRef = useRef(onStart);
   useEffect(() => {
     onStartRef.current = onStart;
@@ -185,10 +192,10 @@ function UpNext({
       return;
     }
     if (!autoStart) return;
-    const endsAt = Date.now() + routine.restBetweenSec * 1000;
+    endsAtRef.current = Date.now() + routine.restBetweenSec * 1000;
     let last = -1;
     const id = window.setInterval(() => {
-      const left = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+      const left = Math.max(0, Math.ceil((endsAtRef.current - Date.now()) / 1000));
       if (left !== last) {
         last = left;
         setRemaining(left);
@@ -208,11 +215,6 @@ function UpNext({
         <p className={styles.context}>
           {t(routine.name)} · exercise {index + 1} of {routine.steps.length}
         </p>
-        {voiceSupported && (
-          <button className={styles.mute} onClick={onToggleVoice}>
-            {voiceEnabled ? t('Mute') : t('Unmute')}
-          </button>
-        )}
       </div>
       <p className={styles.label}>{isFirst ? t('First up') : t('Up next')}</p>
       <h1 className={styles.title}>{t(def.name)}</h1>
@@ -221,15 +223,31 @@ function UpNext({
         {kind === 'hold' ? ' (timed)' : ' reps'} · {step.plan.restSec}s rest between sets
       </p>
       <p className={styles.muted}>{t(def.setupHint)}</p>
-      {isFirst && <CameraPicker value={camera} onChange={onCameraChange} />}
-      {isFirst && <StartPicker mode={startMode} seconds={countdownSec} onChange={onStartModeChange} />}
+      <div>
+        <button className={setupStyles.demoButton} onClick={() => setShowDemo((v) => !v)} aria-expanded={showDemo}>
+          {showDemo ? t('Hide demo') : t('How to do it')}
+        </button>
+      </div>
+      {showDemo && <FormDemo exerciseId={step.exerciseId} speakOnOpen={voiceEnabled && voiceSupported} />}
 
       {autoStart && (
         <div className={styles.countdown}>
           <span className={styles.time}>{formatDuration(remaining)}</span>
           <span className={styles.muted}>{t('rest, then it starts on its own')}</span>
+          <RestAdjust
+            onAdjust={(d) => {
+              const now = Date.now();
+              const left = Math.max(0, endsAtRef.current - now) + d * 1000;
+              endsAtRef.current = now + Math.min(Math.max(left, 0), MAX_REST_SEC * 1000);
+              setRemaining(Math.ceil(Math.max(0, endsAtRef.current - now) / 1000));
+            }}
+          />
         </div>
       )}
+
+      {isFirst && <CameraPicker value={camera} onChange={onCameraChange} />}
+      {isFirst && <StartPicker mode={startMode} seconds={countdownSec} onChange={onStartModeChange} />}
+      <VoiceToggle enabled={voiceEnabled} supported={voiceSupported} onToggle={onToggleVoice} />
 
       <div className={styles.actions}>
         <button className="btn-primary" onClick={onStart}>

@@ -517,4 +517,6 @@ export const HI: Record<string, string> = {
   "{w} outside your target range": "आपकी लक्ष्य सीमा से {w} बाहर",
   "{w} to go": "{w} बाकी",
   "⚖️ Time for a weigh-in. Log your weight →": "⚖️ वज़न करने का समय। अपना वज़न दर्ज करें →",
+  "Rest 10 seconds less": "10 सेकंड कम आराम",
+  "Rest 10 seconds more": "10 सेकंड ज़्यादा आराम",
 };

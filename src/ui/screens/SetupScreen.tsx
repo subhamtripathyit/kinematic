@@ -7,6 +7,7 @@ import { CameraPicker } from '../components/CameraPicker';
 import { StartPicker } from '../components/StartPicker';
 import type { StartMode } from '../../state/settings';
 import { FormDemo } from '../demo/FormDemo';
+import { VoiceToggle } from '../components/VoiceToggle';
 import styles from './SetupScreen.module.css';
 
 interface Props {
@@ -24,7 +25,7 @@ interface Props {
   onBack: () => void;
 }
 
-const REST_OPTIONS = [0, 30, 45, 60, 90, 120, 180];
+const REST_OPTIONS = [0, 30, 45, 60, 90, 120, 180, 240, 300];
 
 /** Choose sets, target and rest before starting. */
 export function SetupScreen({
@@ -168,17 +169,7 @@ export function SetupScreen({
       <CameraPicker value={camera} onChange={onCameraChange} />
       <StartPicker mode={startMode} seconds={countdownSec} onChange={onStartModeChange} />
 
-      <label className={styles.toggle}>
-        <input type="checkbox" checked={voiceEnabled && voiceSupported} disabled={!voiceSupported} onChange={onToggleVoice} />
-        <span>
-          {t('Voice coach')}
-          <span className={styles.toggleHint}>
-            {voiceSupported
-              ? t('Reads out your rep count, tips like "Go deeper" and the rest countdown.')
-              : t('Not supported in this browser. Use Chrome or Edge.')}
-          </span>
-        </span>
-      </label>
+      <VoiceToggle enabled={voiceEnabled} supported={voiceSupported} onToggle={onToggleVoice} />
 
       {error && <p className={styles.error}>{error}</p>}
 

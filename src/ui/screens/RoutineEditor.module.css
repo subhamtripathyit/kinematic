@@ -144,3 +144,10 @@
     flex-direction: column-reverse;
   }
 }
+
+.counter {
+  align-self: flex-end;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}

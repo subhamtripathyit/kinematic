@@ -1,0 +1,22 @@
+.row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.button {
+  min-width: 72px;
+  min-height: 40px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.button:hover {
+  background: rgba(127, 127, 127, 0.15);
+}
