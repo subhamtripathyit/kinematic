@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { t } from '../../i18n';
 import {
   MAX_KG,
   MIN_KG,
@@ -75,16 +76,16 @@ export function GoalSetup({ unit: initialUnit, initial, currentKg, onSave, onCan
   const save = () => {
     const inRange = (kg: number) => kg >= MIN_KG && kg <= MAX_KG;
     if (!Number.isFinite(currentKgVal) || !inRange(currentKgVal)) {
-      return setError(`Enter your current weight (${formatWeight(MIN_KG, unit, 0)} – ${formatWeight(MAX_KG, unit, 0)}).`);
+      return setError(t('Enter your current weight ({min} – {max}).', { min: formatWeight(MIN_KG, unit, 0), max: formatWeight(MAX_KG, unit, 0) }));
     }
     if (type !== 'maintain' && (!Number.isFinite(goalKgVal) || !inRange(goalKgVal))) {
-      return setError(`Enter a goal weight (${formatWeight(MIN_KG, unit, 0)} – ${formatWeight(MAX_KG, unit, 0)}).`);
+      return setError(t('Enter a goal weight ({min} – {max}).', { min: formatWeight(MIN_KG, unit, 0), max: formatWeight(MAX_KG, unit, 0) }));
     }
     if (directionError) return setError(directionError);
     if (heightVal !== undefined && (heightVal < 100 || heightVal > 250)) {
-      return setError('Height looks off. Check the number (100–250 cm, or about 3′3″ – 8′2″).');
+      return setError(t('Height looks off. Check the number (100–250 cm, or about 3′3″ – 8′2″).'));
     }
-    if (target && target <= todayKey()) return setError('The target date must be in the future.');
+    if (target && target <= todayKey()) return setError(t('The target date must be in the future.'));
     onSave(
       {
         type,
@@ -102,8 +103,8 @@ export function GoalSetup({ unit: initialUnit, initial, currentKg, onSave, onCan
   return (
     <section className={styles.card}>
       <div className={styles.headRow}>
-        <h1 className={styles.title}>{initial ? 'Edit your goal' : 'Set your body goal'}</h1>
-        <div className={styles.unitToggle} role="radiogroup" aria-label="Units">
+        <h1 className={styles.title}>{initial ? t('Edit your goal') : t('Set your body goal')}</h1>
+        <div className={styles.unitToggle} role="radiogroup" aria-label={t('Units')}>
           {(['kg', 'lb'] as const).map((u) => (
             <button key={u} role="radio" aria-checked={unit === u} className={unit === u ? styles.unitActive : ''} onClick={() => switchUnit(u)}>
               {u}
@@ -111,9 +112,9 @@ export function GoalSetup({ unit: initialUnit, initial, currentKg, onSave, onCan
           ))}
         </div>
       </div>
-      <p className={styles.muted}>Saved only on this device. You can change it anytime.</p>
+      <p className={styles.muted}>{t('Saved only on this device. You can change it anytime.')}</p>
 
-      <div className={styles.goalTypes} role="radiogroup" aria-label="Goal">
+      <div className={styles.goalTypes} role="radiogroup" aria-label={t('Goal')}>
         {GOALS.map((g) => (
           <button
             key={g.id}
@@ -125,40 +126,40 @@ export function GoalSetup({ unit: initialUnit, initial, currentKg, onSave, onCan
               setError(null);
             }}
           >
-            <span className={styles.goalLabel}>{g.label}</span>
-            <span className={styles.muted}>{g.hint}</span>
+            <span className={styles.goalLabel}>{t(g.label)}</span>
+            <span className={styles.muted}>{t(g.hint)}</span>
           </button>
         ))}
       </div>
 
       <div className={styles.fields}>
         <label className={styles.field}>
-          <span>Current weight ({unit})</span>
+          <span>{t('Current weight')} ({unit})</span>
           <input type="number" inputMode="decimal" step="0.1" value={current} onChange={(e) => { setCurrent(e.target.value); setError(null); }} />
         </label>
         {type !== 'maintain' && (
           <label className={styles.field}>
-            <span>Goal weight ({unit})</span>
+            <span>{t('Goal weight')} ({unit})</span>
             <input type="number" inputMode="decimal" step="0.1" value={goal} onChange={(e) => { setGoal(e.target.value); setError(null); }} />
           </label>
         )}
         {unit === 'kg' ? (
           <label className={styles.field}>
-            <span>Height (cm, optional)</span>
+            <span>{t('Height (cm, optional)')}</span>
             <input type="number" inputMode="numeric" value={heightCm} onChange={(e) => setHeightCm(e.target.value)} />
           </label>
         ) : (
           <div className={styles.field}>
-            <span>Height (optional)</span>
+            <span>{t('Height (optional)')}</span>
             <div className={styles.feetInches}>
-              <input type="number" inputMode="numeric" placeholder="ft" aria-label="Feet" value={feet} onChange={(e) => setFeet(e.target.value)} />
-              <input type="number" inputMode="numeric" placeholder="in" aria-label="Inches" value={inches} onChange={(e) => setInches(e.target.value)} />
+              <input type="number" inputMode="numeric" placeholder={t('ft')} aria-label={t('Feet')} value={feet} onChange={(e) => setFeet(e.target.value)} />
+              <input type="number" inputMode="numeric" placeholder={t('in')} aria-label={t('Inches')} value={inches} onChange={(e) => setInches(e.target.value)} />
             </div>
           </div>
         )}
         {type !== 'maintain' && (
           <label className={styles.field}>
-            <span>Target date (optional)</span>
+            <span>{t('Target date (optional)')}</span>
             <input type="date" value={target} min={todayKey()} onChange={(e) => { setTarget(e.target.value); setError(null); }} />
           </label>
         )}
@@ -168,24 +169,24 @@ export function GoalSetup({ unit: initialUnit, initial, currentKg, onSave, onCan
         <div className={styles.note}>
           {check?.tooFast ? (
             <>
-              <strong className={styles.warnText}>That's faster than is healthy.</strong> It needs about{' '}
+              <strong className={styles.warnText}>{t("That's faster than is healthy.")}</strong> It needs about{' '}
               {formatWeight(check.requiredPerWeek, unit)} per week; a safe pace is up to {formatWeight(check.safePerWeek, unit)} per week.
-              {check.suggestedDate && <> A realistic target is around <strong>{fmtDate(check.suggestedDate)}</strong>.</>}
+              {check.suggestedDate && <> {t('A realistic target is around')} <strong>{fmtDate(check.suggestedDate)}</strong>.</>}
               {check.suggestedDate && (
                 <button className={styles.linkButton} onClick={() => setTarget(check.suggestedDate ?? '')}>
-                  Use this date
+                  {t('Use this date')}
                 </button>
               )}
             </>
           ) : check ? (
             <>
-              Needs about <strong>{formatWeight(check.requiredPerWeek, unit)} per week</strong>: a healthy pace. 👍
+              {t('Needs about')} <strong>{formatWeight(check.requiredPerWeek, unit)} per week</strong>{t(': a healthy pace. 👍')}
             </>
           ) : suggestion ? (
             <>
-              At a steady, healthy pace you'd get there around <strong>{fmtDate(suggestion)}</strong>.
+              {t("At a steady, healthy pace you'd get there around")} <strong>{fmtDate(suggestion)}</strong>.
               <button className={styles.linkButton} onClick={() => setTarget(suggestion)}>
-                Use as target date
+                {t('Use as target date')}
               </button>
             </>
           ) : null}
@@ -203,11 +204,11 @@ export function GoalSetup({ unit: initialUnit, initial, currentKg, onSave, onCan
       <div className={styles.actions}>
         {onCancel && (
           <button className="btn-secondary" onClick={onCancel}>
-            Cancel
+            {t('Cancel')}
           </button>
         )}
         <button className="btn-primary" onClick={save}>
-          {initial ? 'Save goal' : 'Start tracking'}
+          {initial ? t('Save goal') : t('Start tracking')}
         </button>
       </div>
     </section>

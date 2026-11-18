@@ -1,4 +1,5 @@
 import { formScore, describePlan, describeStats, formatDuration, hasProgress, type SessionSummary } from '../../state/session';
+import { t } from '../../i18n';
 import type { Badge } from '../../state/badges';
 import { Celebrations } from '../components/Celebrations';
 import { ShareButton } from '../share/ShareButton';
@@ -34,15 +35,15 @@ export function RoutineSummaryScreen({
     <section className={styles.card}>
       <div>
         <h1 className={styles.title}>
-          {routineName}: {completed ? 'routine complete' : 'routine ended early'}
+          {t(routineName)}: {completed ? 'routine complete' : 'routine ended early'}
         </h1>
         <p className={styles.muted}>
-          {done.length} of {totalExercises} exercises done
+          {t('{done} of {total} exercises done', { done: done.length, total: totalExercises })}
           {done.length > 0 && (
             <>
               {' · '}
               <button className={styles.inlineLink} onClick={onHistory}>
-                saved to history
+                {t('saved to history')}
               </button>
             </>
           )}
@@ -54,15 +55,15 @@ export function RoutineSummaryScreen({
       <div className={styles.stats}>
         <div className={styles.stat}>
           <span className={styles.value}>{done.length}</span>
-          <span className={styles.label}>Exercises done</span>
+          <span className={styles.label}>{t('Exercises done')}</span>
         </div>
         <div className={styles.stat}>
           <span className={styles.value}>{avgScore ?? '–'}</span>
-          <span className={styles.label}>Avg form score</span>
+          <span className={styles.label}>{t('Avg form score')}</span>
         </div>
         <div className={styles.stat}>
           <span className={styles.value}>{formatDuration(totalSec)}</span>
-          <span className={styles.label}>Exercise time</span>
+          <span className={styles.label}>{t('Exercise time')}</span>
         </div>
       </div>
 
@@ -71,18 +72,18 @@ export function RoutineSummaryScreen({
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Exercise</th>
-              <th>Plan</th>
-              <th>Done</th>
-              <th>Form score</th>
+              <th>{t('Exercise')}</th>
+              <th>{t('Plan')}</th>
+              <th>{t('Done')}</th>
+              <th>{t('Form score')}</th>
             </tr>
           </thead>
           <tbody>
             {results.map((r) => (
               <tr key={r.id}>
-                <td>{r.exerciseName}</td>
+                <td>{t(r.exerciseName)}</td>
                 <td>{describePlan(r.kind, r.plan)}</td>
-                <td>{hasProgress(r.totals) ? `${describeStats(r.kind, r.totals)} in ${r.sets.length} sets` : 'skipped'}</td>
+                <td>{hasProgress(r.totals) ? t('{what} in {n} sets', { what: describeStats(r.kind, r.totals), n: r.sets.length }) : t('skipped')}</td>
                 <td>{formScore(r.kind, r.totals) ?? '–'}</td>
               </tr>
             ))}
@@ -93,25 +94,25 @@ export function RoutineSummaryScreen({
 
       <div className={styles.actions}>
         <button className="btn-primary" onClick={onDone}>
-          Back to routines
+          {t('Back to routines')}
         </button>
         <button className="btn-secondary" onClick={onHistory}>
-          See history
+          {t('See history')}
         </button>
         {done.length > 0 && (
           <ShareButton
             filename="kinematic-routine.png"
             card={{
               title: routineName,
-              subtitle: completed ? 'Routine complete' : 'Routine',
+              subtitle: completed ? t('Routine complete') : t('Routine'),
               bigValue: `${done.length}/${totalExercises}`,
               bigLabel: 'exercises done',
               stats: [
-                { label: 'Avg form score', value: avgScore === null ? '–' : String(avgScore) },
-                { label: 'Exercise time', value: formatDuration(totalSec) },
-                { label: 'Day streak', value: String(streak) },
+                { label: t('Avg form score'), value: avgScore === null ? '–' : String(avgScore) },
+                { label: t('Exercise time'), value: formatDuration(totalSec) },
+                { label: t('Day streak'), value: String(streak) },
               ],
-              highlight: newBadges[0] ? `Badge: ${newBadges[0].name}` : undefined,
+              highlight: newBadges[0] ? t('Badge: {name}', { name: t(newBadges[0].name) }) : undefined,
             }}
           />
         )}

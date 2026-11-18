@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
+import { t } from '../../i18n';
 import { exerciseKind, getExercise } from '../../engine/exercises';
 import { VoiceCoach } from '../../engine/voice';
+import { releaseMedia } from '../../engine/mediaSession';
 import type { CameraFacing } from '../../engine/camera';
 import { CameraPicker } from '../components/CameraPicker';
+import { StartPicker } from '../components/StartPicker';
+import type { StartMode } from '../../state/settings';
 import type { Routine } from '../../state/routines';
 import { buildSummary, describePlan, formatDuration, hasProgress, type SessionSummary } from '../../state/session';
 import { bestSetValue, loadHistory } from '../../state/history';
@@ -16,6 +20,9 @@ interface Props {
   onToggleVoice: () => void;
   camera: CameraFacing;
   onCameraChange: (camera: CameraFacing) => void;
+  startMode: StartMode;
+  countdownSec: number;
+  onStartModeChange: (mode: StartMode, seconds: number) => void;
   /** called after each exercise with progress, so it's saved even if the routine is stopped early */
   onExerciseDone: (summary: SessionSummary) => void;
   onFinish: (results: SessionSummary[], completed: boolean) => void;
@@ -29,6 +36,9 @@ export function RoutineRunner({
   onToggleVoice,
   camera,
   onCameraChange,
+  startMode,
+  countdownSec,
+  onStartModeChange,
   onExerciseDone,
   onFinish,
 }: Props) {
@@ -41,12 +51,15 @@ export function RoutineRunner({
     voice.setEnabled(voiceEnabled);
   }, [voice, voiceEnabled]);
 
+  // The camera stays on between exercises; turn it off when the routine screen closes.
+  useEffect(() => () => releaseMedia(), []);
+
   const total = routine.steps.length;
   const step = routine.steps[index];
 
   const goNext = (latest: SessionSummary[]) => {
     if (index + 1 >= total) {
-      voice.say('Routine complete. Great work!', { interrupt: true });
+      voice.say(t('Routine complete. Great work!'), { interrupt: true });
       onFinish(latest, true);
     } else {
       setIndex(index + 1);
@@ -69,6 +82,9 @@ export function RoutineRunner({
         onToggleVoice={onToggleVoice}
         camera={camera}
         onCameraChange={onCameraChange}
+        startMode={startMode}
+        countdownSec={countdownSec}
+        onStartModeChange={onStartModeChange}
         onStart={() => setPhase('working')}
         onSkip={() => goNext(results)}
         onEnd={() => onFinish(results, false)}
@@ -82,13 +98,16 @@ export function RoutineRunner({
       exerciseId={step.exerciseId}
       plan={step.plan}
       camera={camera}
+      keepMediaAlive
+      startMode={startMode}
+      countdownSec={countdownSec}
       voiceEnabled={voiceEnabled}
       voiceSupported={voiceSupported}
       onToggleVoice={onToggleVoice}
       previousBest={bestSetValue(loadHistory(), step.exerciseId)}
-      contextLabel={`${routine.name} · exercise ${index + 1} of ${total}`}
-      endLabel={index + 1 >= total ? 'Finish routine' : 'Finish exercise'}
-      backLabel="End routine"
+      contextLabel={t('{routine} · exercise {n} of {total}', { routine: t(routine.name), n: index + 1, total })}
+      endLabel={index + 1 >= total ? t('Finish routine') : t('Finish exercise')}
+      backLabel={t('End routine')}
       onBack={() => onFinish(results, false)}
       onFinish={(sets, startedAt) => {
         const summary = buildSummary(
@@ -116,6 +135,9 @@ interface UpNextProps {
   onToggleVoice: () => void;
   camera: CameraFacing;
   onCameraChange: (camera: CameraFacing) => void;
+  startMode: StartMode;
+  countdownSec: number;
+  onStartModeChange: (mode: StartMode, seconds: number) => void;
   onStart: () => void;
   onSkip: () => void;
   onEnd: () => void;
@@ -130,6 +152,9 @@ function UpNext({
   onToggleVoice,
   camera,
   onCameraChange,
+  startMode,
+  countdownSec,
+  onStartModeChange,
   onStart,
   onSkip,
   onEnd,
@@ -149,9 +174,9 @@ function UpNext({
   useEffect(() => {
     const planWords =
       kind === 'hold'
-        ? `${step.plan.sets} sets of ${step.plan.target} seconds`
-        : `${step.plan.sets} sets of ${step.plan.target}`;
-    voice.say(`${isFirst ? 'First up' : 'Next up'}: ${def.name}. ${planWords}.`, { interrupt: true });
+        ? t('{sets} sets of {target} seconds', { sets: step.plan.sets, target: step.plan.target })
+        : t('{sets} sets of {target}', { sets: step.plan.sets, target: step.plan.target });
+    voice.say(`${isFirst ? t('First up') : t('Next up')}: ${t(def.name)}. ${planWords}.`, { interrupt: true });
   }, [voice, def.name, isFirst, kind, step.plan.sets, step.plan.target]);
 
   useEffect(() => {
@@ -181,40 +206,41 @@ function UpNext({
     <section className={styles.card}>
       <div className={styles.topRow}>
         <p className={styles.context}>
-          {routine.name} · exercise {index + 1} of {routine.steps.length}
+          {t(routine.name)} · exercise {index + 1} of {routine.steps.length}
         </p>
         {voiceSupported && (
           <button className={styles.mute} onClick={onToggleVoice}>
-            {voiceEnabled ? 'Mute' : 'Unmute'}
+            {voiceEnabled ? t('Mute') : t('Unmute')}
           </button>
         )}
       </div>
-      <p className={styles.label}>{isFirst ? 'First up' : 'Up next'}</p>
-      <h1 className={styles.title}>{def.name}</h1>
+      <p className={styles.label}>{isFirst ? t('First up') : t('Up next')}</p>
+      <h1 className={styles.title}>{t(def.name)}</h1>
       <p className={styles.plan}>
         {describePlan(kind, step.plan)}
         {kind === 'hold' ? ' (timed)' : ' reps'} · {step.plan.restSec}s rest between sets
       </p>
-      <p className={styles.muted}>{def.setupHint}</p>
+      <p className={styles.muted}>{t(def.setupHint)}</p>
       {isFirst && <CameraPicker value={camera} onChange={onCameraChange} />}
+      {isFirst && <StartPicker mode={startMode} seconds={countdownSec} onChange={onStartModeChange} />}
 
       {autoStart && (
         <div className={styles.countdown}>
           <span className={styles.time}>{formatDuration(remaining)}</span>
-          <span className={styles.muted}>rest, then it starts on its own</span>
+          <span className={styles.muted}>{t('rest, then it starts on its own')}</span>
         </div>
       )}
 
       <div className={styles.actions}>
         <button className="btn-primary" onClick={onStart}>
-          {isFirst ? 'Start routine' : 'Start now'}
+          {isFirst ? t('Start routine') : t('Start now')}
         </button>
         <button className="btn-secondary" onClick={onSkip}>
-          Skip this exercise
+          {t('Skip this exercise')}
         </button>
       </div>
       <button className={styles.link} onClick={onEnd}>
-        End routine
+        {t('End routine')}
       </button>
     </section>
   );

@@ -1,5 +1,7 @@
+import { t } from '../../i18n';
 import {
   avgRepSeconds,
+  describeSides,
   describeStats,
   formScore,
   formatDuration,
@@ -37,27 +39,29 @@ export function SummaryScreen({
   const hold = kind === 'hold';
   const mistakes = sortedMistakes(totals);
   const score = formScore(kind, totals);
+  // alternating exercises save per-side counts
+  const hasSides = !hold && sets.some((s) => (s.stats.leftReps ?? 0) + (s.stats.rightReps ?? 0) > 0);
   const tempo = avgRepSeconds(totals);
   const bestThisTime = Math.max(0, ...sets.map((s) => (hold ? s.stats.holdMs : s.stats.reps)));
   const isPersonalBest = saved && previousBest > 0 && bestThisTime > previousBest;
   const pbText = isPersonalBest
     ? hold
-      ? `${formatDuration(bestThisTime / 1000)} hold (was ${formatDuration(previousBest / 1000)})`
-      : `${bestThisTime} reps in one set (was ${previousBest})`
+      ? t('{now} hold (was {was})', { now: formatDuration(bestThisTime / 1000), was: formatDuration(previousBest / 1000) })
+      : t('{now} reps in one set (was {was})', { now: bestThisTime, was: previousBest })
     : undefined;
 
   return (
     <section className={styles.card}>
       <div>
-        <h1 className={styles.title}>{summary.exerciseName}: workout complete</h1>
+        <h1 className={styles.title}>{t(summary.exerciseName)}: workout complete</h1>
         <p className={styles.muted}>
           {summary.plan.mode === 'free'
-            ? `Free workout · ${sets.length} set${sets.length === 1 ? '' : 's'}`
-            : `${sets.length} of ${summary.plan.sets} sets done`}{' '}
+            ? t('Free workout · {n} sets', { n: sets.length })
+            : t('{done} of {total} sets done', { done: sets.length, total: summary.plan.sets })}{' '}
           ·{' '}
           {saved ? (
             <button className={styles.inlineLink} onClick={onHistory}>
-              saved to history
+              {t('saved to history')}
             </button>
           ) : (
             'not saved (nothing was recorded)'
@@ -79,6 +83,7 @@ export function SummaryScreen({
             <Stat label="Form score" value={score ?? '–'} hint="Average of every rep, out of 100" />
             <Stat label="Good form reps" value={totals.goodReps} />
             <Stat label="Partial reps" value={totals.partialReps} />
+            {hasSides && <Stat label="Per side" value={describeSides(totals)} />}
             <Stat label="Avg time per rep" value={tempo === null ? '–' : `${tempo.toFixed(1)}s`} />
             <Stat label="Time under tension" value={formatDuration((totals.tutMs ?? 0) / 1000)} />
           </>
@@ -88,16 +93,17 @@ export function SummaryScreen({
 
       {sets.length > 0 && (
         <div>
-          <h2 className={styles.subtitle}>Sets</h2>
+          <h2 className={styles.subtitle}>{t('Sets')}</h2>
           <div className="table-scroll">
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Set</th>
-                <th>{hold ? 'Held' : 'Reps'}</th>
-                {!hold && <th>Good form</th>}
-                {!hold && <th>Partial</th>}
-                <th>Form score</th>
+                <th>{t('Set')}</th>
+                <th>{hold ? t('Held') : t('Reps')}</th>
+                {!hold && <th>{t('Good form')}</th>}
+                {!hold && <th>{t('Partial')}</th>}
+                {hasSides && <th>{t('Left / Right')}</th>}
+                <th>{t('Form score')}</th>
               </tr>
             </thead>
             <tbody>
@@ -107,6 +113,11 @@ export function SummaryScreen({
                   <td>{hold ? describeStats('hold', s.stats) : s.stats.reps}</td>
                   {!hold && <td>{s.stats.goodReps}</td>}
                   {!hold && <td>{s.stats.partialReps}</td>}
+                  {hasSides && (
+                    <td>
+                      {s.stats.leftReps ?? 0} / {s.stats.rightReps ?? 0}
+                    </td>
+                  )}
                   <td>{formScore(kind, s.stats) ?? '–'}</td>
                 </tr>
               ))}
@@ -117,14 +128,14 @@ export function SummaryScreen({
       )}
 
       <div>
-        <h2 className={styles.subtitle}>What to work on</h2>
+        <h2 className={styles.subtitle}>{t('What to work on')}</h2>
         {mistakes.length === 0 ? (
-          <p className={styles.muted}>No form issues detected. Nice work.</p>
+          <p className={styles.muted}>{t('No form issues detected. Nice work.')}</p>
         ) : (
           <ul className={styles.list}>
             {mistakes.map(([message, count]) => (
               <li key={message}>
-                <span>{message}</span>
+                <span>{t(message)}</span>
                 <span className={styles.count}>×{count}</span>
               </li>
             ))}
@@ -134,25 +145,25 @@ export function SummaryScreen({
 
       <div className={styles.actions}>
         <button className="btn-primary" onClick={onAgain}>
-          Do it again
+          {t('Do it again')}
         </button>
         <button className="btn-secondary" onClick={onPickAnother}>
-          Choose another exercise
+          {t('Choose another exercise')}
         </button>
         {saved && (
           <ShareButton
             filename={`kinematic-${summary.exerciseId}.png`}
             card={{
               title: summary.exerciseName,
-              subtitle: summary.plan.mode === 'free' ? 'Free workout' : `${sets.length} sets`,
+              subtitle: summary.plan.mode === 'free' ? t('Free workout') : t('{n} sets', { n: sets.length }),
               bigValue: hold ? formatDuration(totals.holdMs / 1000) : String(totals.reps),
               bigLabel: hold ? 'held with good form' : 'reps',
               stats: [
-                { label: 'Form score', value: score === null ? '–' : String(score) },
-                { label: 'Sets', value: String(sets.length) },
-                { label: 'Day streak', value: String(streak) },
+                { label: t('Form score'), value: score === null ? '–' : String(score) },
+                { label: t('Sets'), value: String(sets.length) },
+                { label: t('Day streak'), value: String(streak) },
               ],
-              highlight: isPersonalBest ? 'New personal best!' : newBadges[0] ? `Badge: ${newBadges[0].name}` : undefined,
+              highlight: isPersonalBest ? t('New personal best!') : newBadges[0] ? t('Badge: {name}', { name: t(newBadges[0].name) }) : undefined,
             }}
           />
         )}
@@ -163,9 +174,9 @@ export function SummaryScreen({
 
 function Stat({ label, value, hint }: { label: string; value: number | string; hint?: string }) {
   return (
-    <div className={styles.stat} title={hint}>
+    <div className={styles.stat} title={hint ? t(hint) : undefined}>
       <span className={styles.value}>{value}</span>
-      <span className={styles.label}>{label}</span>
+      <span className={styles.label}>{t(label)}</span>
     </div>
   );
 }

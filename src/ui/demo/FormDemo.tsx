@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { t } from '../../i18n';
 import { getExercise } from '../../engine/exercises';
 import { VoiceCoach } from '../../engine/voice';
 import { DEMOS } from './demos';
@@ -15,11 +16,11 @@ interface Props {
 export function FormDemo({ exerciseId, speakOnOpen }: Props) {
   const demo = DEMOS[exerciseId];
   const exercise = getExercise(exerciseId);
-  const [t, setT] = useState(0);
+  const [progress, setProgress] = useState(0);
   const [voice] = useState(() => new VoiceCoach(true));
 
   const script = demo
-    ? `How to do ${exercise.name}. ${demo.howTo} Common mistakes: ${demo.mistakes.join('. ')}.`
+    ? `${t('How to do {name}.', { name: t(exercise.name) })} ${t(demo.howTo)} ${t('Common mistakes')}: ${demo.mistakes.map((m) => t(m)).join('. ')}.`
     : '';
 
   // Animate: smooth back-and-forth between the two key poses.
@@ -27,14 +28,14 @@ export function FormDemo({ exerciseId, speakOnOpen }: Props) {
     if (!demo) return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduced) {
-      setT(demo.hold ? 0 : 1);
+      setProgress(demo.hold ? 0 : 1);
       return;
     }
     let id = 0;
     const start = performance.now();
     const tick = (now: number) => {
       const phase = ((now - start) % demo.periodMs) / demo.periodMs;
-      setT((1 - Math.cos(phase * 2 * Math.PI)) / 2);
+      setProgress((1 - Math.cos(phase * 2 * Math.PI)) / 2);
       id = requestAnimationFrame(tick);
     };
     id = requestAnimationFrame(tick);
@@ -48,18 +49,18 @@ export function FormDemo({ exerciseId, speakOnOpen }: Props) {
 
   const skeleton = useMemo<Skeleton | null>(() => {
     if (!demo) return null;
-    const pose = lerpPose(demo.frames[0], demo.frames[1], t);
+    const pose = lerpPose(demo.frames[0], demo.frames[1], progress);
     return place(buildSkeleton(pose), demo.placement);
-  }, [demo, t]);
+  }, [demo, progress]);
 
-  if (!demo || !skeleton) return <p className={styles.muted}>No demo for this exercise yet.</p>;
+  if (!demo || !skeleton) return <p className={styles.muted}>{t('No demo for this exercise yet.')}</p>;
 
   const p = skeleton.points;
   const anchor = p.wrist ?? p.wL;
 
   return (
     <div className={styles.wrap}>
-      <svg viewBox="0 0 240 200" className={styles.svg} role="img" aria-label={`${exercise.name} demonstration`}>
+      <svg viewBox="0 0 240 200" className={styles.svg} role="img" aria-label={`${t(exercise.name)} demonstration`}>
         {demo.placement.y.mode === 'ground' && (
           <line x1={8} x2={232} y1={GROUND_Y + 3} y2={GROUND_Y + 3} className={styles.floor} />
         )}
@@ -105,17 +106,17 @@ export function FormDemo({ exerciseId, speakOnOpen }: Props) {
 
       <div className={styles.text}>
         <p className={styles.howTo}>
-          {demo.hold && <span className={styles.holdTag}>Hold</span>}
-          {demo.howTo}
+          {demo.hold && <span className={styles.holdTag}>{t('Hold')}</span>}
+          {t(demo.howTo)}
         </p>
-        <p className={styles.mistakesTitle}>Common mistakes</p>
+        <p className={styles.mistakesTitle}>{t('Common mistakes')}</p>
         <ul className={styles.mistakes}>
           {demo.mistakes.map((m) => (
-            <li key={m}>{m}</li>
+            <li key={m}>{t(m)}</li>
           ))}
         </ul>
         <button className={styles.readAloud} onClick={() => voice.say(script, { interrupt: true })}>
-          Read aloud
+          {t('Read aloud')}
         </button>
       </div>
     </div>

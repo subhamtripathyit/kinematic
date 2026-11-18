@@ -15,6 +15,11 @@ export const bicepCurl: RepDefinition = {
     minOverSides(lms, ['shoulder', 'elbow', 'wrist'], (s) => angleAt(lms[s.shoulder], lms[s.elbow], lms[s.wrist], aspect), j),
   counter: { direction: 'decrease', restThreshold: 150, startThreshold: 130, activeThreshold: 60 },
   partialMessage: 'Curl all the way up',
+  // count each side separately ("Left 5 · Right 5")
+  sides: {
+    needs: ['shoulder', 'elbow', 'wrist'],
+    measure: (lms, j, aspect) => angleAt(lms[j.shoulder], lms[j.elbow], lms[j.wrist], aspect),
+  },
   checks: [
     {
       id: 'curl-swing',

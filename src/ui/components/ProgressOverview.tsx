@@ -1,4 +1,5 @@
 import { computeBadges } from '../../state/badges';
+import { t } from '../../i18n';
 import { currentStreak, heatmap, longestStreak, workoutsThisWeek } from '../../state/progress';
 import type { SessionSummary } from '../../state/session';
 import styles from './ProgressOverview.module.css';
@@ -36,7 +37,7 @@ export function ProgressOverview({ history, weeklyGoal, onWeeklyGoalChange }: Pr
             workout days this week ·{' '}
             <label className={styles.goal}>
               goal{' '}
-              <select value={weeklyGoal} onChange={(e) => onWeeklyGoalChange(Number(e.target.value))} aria-label="Weekly goal">
+              <select value={weeklyGoal} onChange={(e) => onWeeklyGoalChange(Number(e.target.value))} aria-label={t('Weekly goal')}>
                 {[1, 2, 3, 4, 5, 6, 7].map((n) => (
                   <option key={n} value={n}>
                     {n}
@@ -48,22 +49,22 @@ export function ProgressOverview({ history, weeklyGoal, onWeeklyGoalChange }: Pr
           <div className={styles.progress} aria-hidden="true">
             <div className={styles.progressFill} style={{ width: `${pct}%` }} />
           </div>
-          {thisWeek >= weeklyGoal && <span className={styles.done}>Weekly goal reached!</span>}
+          {thisWeek >= weeklyGoal && <span className={styles.done}>{t('Weekly goal reached!')}</span>}
         </div>
         <div className={styles.card}>
           <span className={styles.big}>
             {earned}/{badges.length}
           </span>
-          <span className={styles.label}>badges earned</span>
+          <span className={styles.label}>{t('badges earned')}</span>
         </div>
       </div>
 
       <div>
-        <h2 className={styles.subtitle}>Last 12 weeks</h2>
+        <h2 className={styles.subtitle}>{t('Last 12 weeks')}</h2>
         <div className={styles.heatWrap}>
           <div className={styles.dayLabels}>
             {DAY_LABELS.map((d, i) => (
-              <span key={i}>{d}</span>
+              <span key={i}>{d ? t(d) : ''}</span>
             ))}
           </div>
           <div className={styles.heat}>
@@ -74,7 +75,7 @@ export function ProgressOverview({ history, weeklyGoal, onWeeklyGoalChange }: Pr
                     key={cell.date}
                     className={`${styles.cell} ${cell.future ? styles.future : ''}`}
                     data-level={Math.min(3, cell.count)}
-                    title={`${cell.date}: ${cell.count} exercise${cell.count === 1 ? '' : 's'}`}
+                    title={t('{date}: {n} exercises', { date: cell.date, n: cell.count })}
                   />
                 ))}
               </div>
@@ -84,15 +85,15 @@ export function ProgressOverview({ history, weeklyGoal, onWeeklyGoalChange }: Pr
       </div>
 
       <div>
-        <h2 className={styles.subtitle}>Badges</h2>
+        <h2 className={styles.subtitle}>{t('Badges')}</h2>
         <div className={styles.badges}>
           {badges.map((b) => (
-            <div key={b.id} className={`${styles.badge} ${b.earned ? styles.earned : ''}`} title={b.description}>
+            <div key={b.id} className={`${styles.badge} ${b.earned ? styles.earned : ''}`} title={t(b.description)}>
               <span className={styles.badgeIcon} aria-hidden="true">
                 {b.earned ? '★' : '☆'}
               </span>
-              <span className={styles.badgeName}>{b.name}</span>
-              <span className={styles.badgeDesc}>{b.description}</span>
+              <span className={styles.badgeName}>{t(b.name)}</span>
+              <span className={styles.badgeDesc}>{t(b.description)}</span>
             </div>
           ))}
         </div>

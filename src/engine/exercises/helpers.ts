@@ -10,8 +10,9 @@ function overSides(
   fn: (j: Joints) => number,
   fallback: Joints,
   pick: (values: number[]) => number,
+  minVisibility?: number,
 ): number {
-  const values = BOTH_SIDES.filter((j) => isVisible(lms, needed.map((k) => j[k]))).map(fn);
+  const values = BOTH_SIDES.filter((j) => isVisible(lms, needed.map((k) => j[k]), minVisibility)).map(fn);
   return values.length ? pick(values) : fn(fallback);
 }
 
@@ -21,8 +22,14 @@ function overSides(
  * side is working has the smaller angle. Also used where BOTH arms must reach
  * full range (shoulder press, jumping jacks): the weaker arm decides.
  */
-export function minOverSides(lms: Landmark[], needed: (keyof Joints)[], fn: (j: Joints) => number, fallback: Joints): number {
-  return overSides(lms, needed, fn, fallback, (v) => Math.min(...v));
+export function minOverSides(
+  lms: Landmark[],
+  needed: (keyof Joints)[],
+  fn: (j: Joints) => number,
+  fallback: Joints,
+  minVisibility?: number,
+): number {
+  return overSides(lms, needed, fn, fallback, (v) => Math.min(...v), minVisibility);
 }
 
 export function maxOverSides(lms: Landmark[], needed: (keyof Joints)[], fn: (j: Joints) => number, fallback: Joints): number {

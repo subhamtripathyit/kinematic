@@ -1,4 +1,5 @@
 import type { CameraFacing } from '../../engine/camera';
+import { t } from '../../i18n';
 import styles from './CameraPicker.module.css';
 
 const isTouchDevice = () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
@@ -8,8 +9,8 @@ export function CameraPicker({ value, onChange }: { value: CameraFacing; onChang
   return (
     <div className={styles.wrap}>
       <div className={styles.row}>
-        <span className={styles.label}>Camera</span>
-        <div className={styles.toggle} role="radiogroup" aria-label="Camera">
+        <span className={styles.label}>{t('Camera')}</span>
+        <div className={styles.toggle} role="radiogroup" aria-label={t('Camera')}>
           {(
             [
               ['user', 'Front'],
@@ -23,16 +24,14 @@ export function CameraPicker({ value, onChange }: { value: CameraFacing; onChang
               className={`${styles.option} ${value === id ? styles.active : ''}`}
               onClick={() => onChange(id)}
             >
-              {label}
+              {t(label)}
             </button>
           ))}
         </div>
       </div>
       {isTouchDevice() && (
         <p className={styles.tip}>
-          <strong>On a phone:</strong> hold it upright (portrait), propped at about hip height, and stand 2.5–3 m away
-          so your head and feet both fit. The back camera usually has a wider, sharper view. Laptops just use the
-          webcam.
+          <strong>{t('On a phone:')}</strong> {t('hold it upright (portrait), propped at about hip height, and stand 2.5–3 m away so your head and feet both fit. The back camera usually has a wider, sharper view. Laptops just use the webcam.')}
         </p>
       )}
     </div>

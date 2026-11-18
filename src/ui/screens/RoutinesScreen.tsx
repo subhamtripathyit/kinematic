@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { t } from '../../i18n';
 import { exerciseKind, EXERCISES } from '../../engine/exercises';
 import { describePlan } from '../../state/session';
 import type { Routine } from '../../state/routines';
@@ -20,22 +21,20 @@ export function RoutinesScreen({ builtIn, custom, onStart, onNew, onEdit, onCopy
     <section className={styles.screen}>
       <div className={styles.top}>
         <div>
-          <h1 className={styles.title}>Routines</h1>
+          <h1 className={styles.title}>{t('Routines')}</h1>
           <p className={styles.muted}>
-            A routine runs several exercises back to back, with rest in between. For a single exercise, use the
-            Exercises tab.
+            {t('A routine runs several exercises back to back, with rest in between. For a single exercise, use the Exercises tab.')}
           </p>
         </div>
         <button className="btn-primary" onClick={onNew}>
-          New routine
+          {t('New routine')}
         </button>
       </div>
 
-      <h2 className={styles.groupTitle}>My routines</h2>
+      <h2 className={styles.groupTitle}>{t('My routines')}</h2>
       {custom.length === 0 ? (
         <p className={styles.muted}>
-          You haven't made any yet. Create one, or press <strong>Customize</strong> on a built-in routine to make your
-          own version of it.
+          {t("You haven't made any yet. Create one, or press")} <strong>{t('Customize')}</strong> {t('on a built-in routine to make your own version of it.')}
         </p>
       ) : (
         <div className={styles.grid}>
@@ -45,7 +44,7 @@ export function RoutinesScreen({ builtIn, custom, onStart, onNew, onEdit, onCopy
         </div>
       )}
 
-      <h2 className={styles.groupTitle}>Built-in</h2>
+      <h2 className={styles.groupTitle}>{t('Built-in')}</h2>
       <div className={styles.grid}>
         {builtIn.map((r) => (
           <RoutineCard key={r.id} routine={r} onStart={onStart} onCopy={onCopy} />
@@ -72,15 +71,15 @@ function RoutineCard({
   const steps = routine.steps
     .map((s) => {
       const def = EXERCISES.find((e) => e.id === s.exerciseId);
-      return def ? `${def.name} ${describePlan(exerciseKind(def), s.plan)}` : null;
+      return def ? `${t(def.name)} ${describePlan(exerciseKind(def), s.plan)}` : null;
     })
     .filter((x): x is string => x !== null);
 
   return (
     <div className={styles.card}>
       <div>
-        <h3 className={styles.name}>{routine.name}</h3>
-        {routine.description && <p className={styles.muted}>{routine.description}</p>}
+        <h3 className={styles.name}>{t(routine.name)}</h3>
+        {routine.description && <p className={styles.muted}>{t(routine.description)}</p>}
       </div>
       <ol className={styles.steps}>
         {steps.map((s, i) => (
@@ -88,15 +87,15 @@ function RoutineCard({
         ))}
       </ol>
       <p className={styles.meta}>
-        {steps.length} exercise{steps.length === 1 ? '' : 's'} · {routine.restBetweenSec}s rest between exercises
+        {t('{n} exercises · {s}s rest between exercises', { n: steps.length, s: routine.restBetweenSec })}
       </p>
       <div className={styles.actions}>
         <button className="btn-primary" onClick={() => onStart(routine)} disabled={steps.length === 0}>
-          Start
+          {t('Start')}
         </button>
         {onEdit && (
           <button className="btn-secondary" onClick={() => onEdit(routine)}>
-            Edit
+            {t('Edit')}
           </button>
         )}
         <button
@@ -104,27 +103,27 @@ function RoutineCard({
           onClick={() => onCopy(routine)}
           title={
             routine.builtIn
-              ? 'Built-in routines stay as they are. This makes your own version that you can change.'
-              : 'Make a duplicate of this routine'
+              ? t('Built-in routines stay as they are. This makes your own version that you can change.')
+              : t('Make a duplicate of this routine')
           }
         >
-          {routine.builtIn ? 'Customize' : 'Duplicate'}
+          {routine.builtIn ? t('Customize') : t('Duplicate')}
         </button>
       </div>
       {onDelete &&
         (confirming ? (
           <div className={styles.confirm}>
-            <span>Delete this routine?</span>
+            <span>{t('Delete this routine?')}</span>
             <button className={styles.link} onClick={() => onDelete(routine.id)}>
-              Yes, delete
+              {t('Yes, delete')}
             </button>
             <button className={styles.link} onClick={() => setConfirming(false)}>
-              Cancel
+              {t('Cancel')}
             </button>
           </div>
         ) : (
           <button className={styles.link} onClick={() => setConfirming(true)}>
-            Delete
+            {t('Delete')}
           </button>
         ))}
     </div>

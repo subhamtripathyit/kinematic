@@ -1,3 +1,5 @@
+import { speechLang } from '../i18n';
+
 /**
  * Voice coach: speaks rep counts and tips using the browser's built-in speech.
  * Nothing to install; works in Chrome and Edge.
@@ -34,8 +36,13 @@ export class VoiceCoach {
 
     if (opts.interrupt) this.synth.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.1;
-    utterance.lang = 'en-US';
+    const lang = speechLang();
+    utterance.lang = lang;
+    // pick an installed voice for that language (e.g. a Hindi voice), if there is one
+    const prefix = lang.slice(0, 2);
+    const voice = this.synth.getVoices().find((v) => v.lang.replace('_', '-').toLowerCase().startsWith(prefix));
+    if (voice) utterance.voice = voice;
+    utterance.rate = prefix === 'en' ? 1.1 : 1;
     this.synth.speak(utterance);
   }
 

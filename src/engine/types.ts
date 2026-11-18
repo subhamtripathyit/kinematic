@@ -42,6 +42,10 @@ export interface ExerciseStats {
   tutMs: number;
   /** form score 0-100 for every rep (full and partial), rep exercises only */
   formScores: number[];
+  /** alternating exercises (lunges, curls...): reps done with the left / right side.
+   *  reps - left - right = reps where we weren't sure (or both sides together). */
+  leftReps?: number;
+  rightReps?: number;
   /** mistake message -> how many times it happened */
   mistakes: Record<string, number>;
 }

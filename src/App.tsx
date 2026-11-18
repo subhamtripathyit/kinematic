@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { LANGS, setLang, t } from './i18n';
 import { exerciseKind, getExercise } from './engine/exercises';
 import { PickerScreen } from './ui/screens/PickerScreen';
 import { SetupScreen } from './ui/screens/SetupScreen';
@@ -64,6 +65,8 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'picker' });
   const [settings, setSettings] = useState<Settings>(() => loadSettings());
   const [customRoutines, setCustomRoutines] = useState<Routine[]>(() => loadCustomRoutines());
+  // every t('...') call below reads the language set here
+  setLang(settings.language);
 
   const updateSettings = (patch: Partial<Settings>) => {
     const next = { ...settings, ...patch };
@@ -128,7 +131,7 @@ export default function App() {
         ...routine,
         id: '',
         builtIn: undefined,
-        name: `${routine.name} ${routine.builtIn ? '(my version)' : '(copy)'}`.slice(0, 40),
+        name: `${t(routine.name)} ${routine.builtIn ? t('(my version)') : t('(copy)')}`.slice(0, 40),
       },
     });
   };
@@ -140,7 +143,7 @@ export default function App() {
     <div className={styles.app}>
       <header className={styles.header}>
         <button className={styles.logo} onClick={() => setScreen({ name: 'picker' })}>
-          Kinematic
+          {t('Kinematic')}
         </button>
         <nav className={styles.nav}>
           {(
@@ -155,12 +158,25 @@ export default function App() {
               key={id}
               className={`${styles.navLink} ${tab === id ? styles.navActive : ''}`}
               onClick={() => setScreen(target)}
-              title={inWorkout ? 'Leaving will stop the current workout' : undefined}
+              title={inWorkout ? t('Leaving will stop the current workout') : undefined}
             >
-              {label}
+              {t(label)}
             </button>
           ))}
         </nav>
+        <div className={styles.langSwitch} role="radiogroup" aria-label="Language">
+          {LANGS.map((l) => (
+            <button
+              key={l.id}
+              role="radio"
+              aria-checked={settings.language === l.id}
+              className={settings.language === l.id ? styles.langActive : ''}
+              onClick={() => updateSettings({ language: l.id })}
+            >
+              {l.id === 'en' ? 'EN' : 'हिं'}
+            </button>
+          ))}
+        </div>
       </header>
       <main className={styles.main}>
         {screen.name === 'picker' && (
@@ -181,6 +197,9 @@ export default function App() {
             onToggleVoice={toggleVoice}
             camera={settings.camera}
             onCameraChange={(camera) => updateSettings({ camera })}
+            startMode={settings.startMode}
+            countdownSec={settings.countdownSec}
+            onStartModeChange={(startMode, countdownSec) => updateSettings({ startMode, countdownSec })}
             onBack={() => setScreen({ name: 'picker' })}
             onStart={(plan) => startWorkout(screen.exerciseId, plan)}
           />
@@ -192,6 +211,8 @@ export default function App() {
             exerciseId={screen.exerciseId}
             plan={screen.plan}
             camera={settings.camera}
+            startMode={settings.startMode}
+            countdownSec={settings.countdownSec}
             previousBest={screen.previousBest}
             voiceEnabled={settings.voiceEnabled}
             voiceSupported={voiceSupported}
@@ -246,6 +267,9 @@ export default function App() {
             onToggleVoice={toggleVoice}
             camera={settings.camera}
             onCameraChange={(camera) => updateSettings({ camera })}
+            startMode={settings.startMode}
+            countdownSec={settings.countdownSec}
+            onStartModeChange={(startMode, countdownSec) => updateSettings({ startMode, countdownSec })}
             onExerciseDone={(summary) => saveSession(summary)}
             onFinish={(results, completed) => {
               const after = loadHistory();

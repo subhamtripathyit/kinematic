@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { t } from '../../i18n';
 import { exercisesByCategory, type Category } from '../../engine/exercises';
 import { loadHistory } from '../../state/history';
 import { currentStreak, workoutsThisWeek } from '../../state/progress';
@@ -35,24 +36,24 @@ export function PickerScreen({
     <section className={styles.screen}>
       {progress.any && (
         <div className={styles.progressChip}>
-          <span>🔥 {progress.streak}-day streak</span>
+          <span>🔥 {t('{n}-day streak', { n: progress.streak })}</span>
           <span>
-            · {progress.week}/{weeklyGoal} workout days this week
+            · {t('{done}/{goal} workout days this week', { done: progress.week, goal: weeklyGoal })}
             {progress.week >= weeklyGoal ? ' ✓' : ''}
           </span>
         </div>
       )}
       {progress.weighInDue && (
         <button className={styles.weighIn} onClick={onOpenBody}>
-          ⚖️ Time for a weigh-in. Log your weight →
+          {t('⚖️ Time for a weigh-in. Log your weight →')}
         </button>
       )}
-      <h1 className={styles.title}>Choose an exercise</h1>
+      <h1 className={styles.title}>{t('Choose an exercise')}</h1>
       <p className={styles.subtitle}>
-        Kinematic counts your reps and checks your form in real time. Your video never leaves your laptop.
+        {t('Kinematic counts your reps and checks your form in real time. Your video never leaves your laptop.')}
       </p>
 
-      <div className={styles.chips} role="tablist" aria-label="Filter by body part">
+      <div className={styles.chips} role="tablist" aria-label={t('Filter by body part')}>
         <button
           role="tab"
           aria-selected={filter === 'all'}
@@ -69,7 +70,7 @@ export function PickerScreen({
             className={`${styles.chip} ${filter === g.id ? styles.chipActive : ''}`}
             onClick={() => setFilter(g.id)}
           >
-            {g.label}
+            {t(g.label)}
             <span className={styles.chipCount}>{g.exercises.length}</span>
           </button>
         ))}
@@ -77,16 +78,16 @@ export function PickerScreen({
 
       {visible.map((group) => (
         <div key={group.id} className={styles.group}>
-          <h2 className={styles.groupTitle}>{group.label}</h2>
+          <h2 className={styles.groupTitle}>{t(group.label)}</h2>
           <div className={styles.grid}>
             {group.exercises.map((ex) => (
               <button key={ex.id} className={styles.card} onClick={() => onSelect(ex.id)}>
-                <span className={styles.name}>{ex.name}</span>
+                <span className={styles.name}>{t(ex.name)}</span>
                 <span className={styles.badges}>
-                  <span className={styles.view}>{ex.cameraView === 'side' ? 'Side view' : 'Front view'}</span>
-                  {ex.kind === 'hold' && <span className={styles.timed}>Timed hold</span>}
+                  <span className={styles.view}>{ex.cameraView === 'side' ? t('Side view') : t('Front view')}</span>
+                  {ex.kind === 'hold' && <span className={styles.timed}>{t('Timed hold')}</span>}
                 </span>
-                <span className={styles.hint}>{ex.setupHint}</span>
+                <span className={styles.hint}>{t(ex.setupHint)}</span>
               </button>
             ))}
           </div>

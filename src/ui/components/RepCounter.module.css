@@ -1,7 +1,7 @@
 .box {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
   padding: var(--gap);
   background: var(--surface-2);
   border-radius: var(--radius);
@@ -23,4 +23,23 @@
 .label {
   color: var(--text-muted);
   font-size: 1.1rem;
+}
+
+.main {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.sides {
+  display: flex;
+  gap: 16px;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.sides strong {
+  color: var(--text);
+  font-size: 1.2rem;
+  font-variant-numeric: tabular-nums;
 }

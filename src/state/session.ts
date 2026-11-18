@@ -18,7 +18,18 @@ export interface SessionSummary {
 }
 
 export function emptyTotals(): ExerciseStats {
-  return { reps: 0, goodReps: 0, partialReps: 0, holdMs: 0, positionMs: 0, tutMs: 0, formScores: [], mistakes: {} };
+  return {
+    reps: 0,
+    goodReps: 0,
+    partialReps: 0,
+    holdMs: 0,
+    positionMs: 0,
+    tutMs: 0,
+    formScores: [],
+    leftReps: 0,
+    rightReps: 0,
+    mistakes: {},
+  };
 }
 
 /** Adds up several sets. Tolerates old saved data that lacks newer fields. */
@@ -32,6 +43,8 @@ export function totalStats(sets: SetResult[]): ExerciseStats {
     total.positionMs += stats.positionMs ?? 0;
     total.tutMs += stats.tutMs ?? 0;
     total.formScores.push(...(stats.formScores ?? []));
+    total.leftReps = (total.leftReps ?? 0) + (stats.leftReps ?? 0);
+    total.rightReps = (total.rightReps ?? 0) + (stats.rightReps ?? 0);
     for (const [message, count] of Object.entries(stats.mistakes)) {
       total.mistakes[message] = (total.mistakes[message] ?? 0) + count;
     }
@@ -83,6 +96,14 @@ export function avgRepSeconds(s: ExerciseStats): number | null {
   const reps = s.reps + s.partialReps;
   const tut = s.tutMs ?? 0;
   return reps > 0 && tut > 0 ? tut / reps / 1000 : null;
+}
+
+/** "Left 5 · Right 4" (+ "· both 2" for reps we couldn't credit to one side). */
+export function describeSides(s: ExerciseStats): string {
+  const left = s.leftReps ?? 0;
+  const right = s.rightReps ?? 0;
+  const unsure = Math.max(0, s.reps - left - right);
+  return `Left ${left} · Right ${right}${unsure > 0 ? ` · both/unsure ${unsure}` : ''}`;
 }
 
 /** Mistakes sorted from most to least common. */

@@ -1,4 +1,5 @@
 import { useWidth } from './useWidth';
+import { t } from '../../i18n';
 import styles from './ProgressChart.module.css';
 
 export interface ChartPoint {
@@ -27,7 +28,7 @@ export function ProgressChart({ points, format, maxValue }: Props) {
   if (points.length === 0) {
     return (
       <div ref={ref}>
-        <p className={styles.empty}>No data for this yet.</p>
+        <p className={styles.empty}>{t('No data for this yet.')}</p>
       </div>
     );
   }
@@ -43,7 +44,7 @@ export function ProgressChart({ points, format, maxValue }: Props) {
 
   return (
     <div className={styles.wrap} ref={ref}>
-      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className={styles.svg} role="img" aria-label="Progress chart">
+      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className={styles.svg} role="img" aria-label={t('Progress chart')}>
         {gridValues.map((v) => (
           <g key={v}>
             <line x1={PAD.left} x2={W - PAD.right} y1={y(v)} y2={y(v)} className={styles.grid} />
@@ -68,7 +69,7 @@ export function ProgressChart({ points, format, maxValue }: Props) {
           </g>
         ))}
       </svg>
-      {points.length === 1 && <p className={styles.empty}>Do this exercise again to see a trend.</p>}
+      {points.length === 1 && <p className={styles.empty}>{t('Do this exercise again to see a trend.')}</p>}
     </div>
   );
 }

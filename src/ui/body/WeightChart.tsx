@@ -1,4 +1,5 @@
 import { parseDay, toDisplay, trendSeries, type WeightEntry, type WeightUnit } from '../../state/body';
+import { t } from '../../i18n';
 import { useWidth } from '../components/useWidth';
 import styles from './Body.module.css';
 
@@ -29,7 +30,7 @@ export function WeightChart({ entries, goalKg, unit, workoutDays, rangeDays }: P
   if (pts.length === 0)
     return (
       <div ref={ref}>
-        <p className={styles.muted}>No weigh-ins in this period yet.</p>
+        <p className={styles.muted}>{t('No weigh-ins in this period yet.')}</p>
       </div>
     );
 
@@ -60,7 +61,7 @@ export function WeightChart({ entries, goalKg, unit, workoutDays, rangeDays }: P
 
   return (
     <div ref={ref}>
-    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className={styles.chart} role="img" aria-label="Weight progress chart">
+    <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className={styles.chart} role="img" aria-label={t('Weight progress chart')}>
       {ticks.map((v) => (
         <g key={v}>
           <line x1={PAD.left} x2={W - PAD.right} y1={y(v)} y2={y(v)} className={styles.grid} />

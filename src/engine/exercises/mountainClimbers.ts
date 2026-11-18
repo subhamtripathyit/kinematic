@@ -17,6 +17,11 @@ export const mountainClimbers: RepDefinition = {
   partialMessage: 'Drive your knee further in',
   // Done fast on purpose: no 'Slow down'.
   minRepMs: 0,
+  // count each side separately ("Left 5 · Right 5")
+  sides: {
+    needs: ['shoulder', 'hip', 'knee'],
+    measure: (lms, j, aspect) => angleAt(lms[j.shoulder], lms[j.hip], lms[j.knee], aspect),
+  },
   checks: [
     {
       id: 'climbers-hips',

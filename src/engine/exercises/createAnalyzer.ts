@@ -69,7 +69,35 @@ export interface RepDefinition extends BaseDefinition {
   checks: FormCheck[];
   /** Reps faster than this get "Slow down". Default 1000 ms. 0 = no tempo check (jumping jacks). */
   minRepMs?: number;
+  /**
+   * Alternating exercises: how to measure ONE side, so each rep can be credited to
+   * the left or right side. The side that moved further is the one that worked.
+   */
+  sides?: SideMeasure | SideVote;
 }
+
+/** Compare one measurement per side: the side that moved further worked (curls, mountain climbers). */
+export interface SideMeasure {
+  needs: (keyof Joints)[];
+  measure: (lms: Landmark[], joints: Joints, aspect: number) => number;
+}
+
+/**
+ * Each frame near the bottom of the rep says which side is working (or null if unsure).
+ * The rep goes to the side with a clear majority. Used where both sides move (lunges).
+ */
+export interface SideVote {
+  vote: (lms: Landmark[], aspect: number) => Side | null;
+}
+
+/** Votes needed, and the share the winning side needs, before a rep is credited to it. */
+const MIN_SIDE_VOTES = 3;
+const SIDE_MAJORITY = 0.65;
+/** Only frames at least this far into the range (0 = start, 1 = full depth) vote. */
+const VOTE_DEPTH = 0.6;
+
+/** The two sides must differ by at least this much (degrees) before we credit a rep to one side. */
+const SIDE_MARGIN = 15;
 
 /** Timed exercise (plank, wall sit...). */
 export interface HoldDefinition extends BaseDefinition {
@@ -99,7 +127,18 @@ const TOO_FAST: Feedback = { id: 'too-fast', message: 'Slow down', level: 'warn'
 const HOLDING: Feedback = { id: 'holding', message: 'Hold it, looking good', level: 'good' };
 
 export function emptyStats(): ExerciseStats {
-  return { reps: 0, goodReps: 0, partialReps: 0, holdMs: 0, positionMs: 0, tutMs: 0, formScores: [], mistakes: {} };
+  return {
+    reps: 0,
+    goodReps: 0,
+    partialReps: 0,
+    holdMs: 0,
+    positionMs: 0,
+    tutMs: 0,
+    formScores: [],
+    leftReps: 0,
+    rightReps: 0,
+    mistakes: {},
+  };
 }
 
 const copyStats = (s: ExerciseStats): ExerciseStats => ({
@@ -138,6 +177,10 @@ function createRepAnalyzer(def: RepDefinition): ExerciseAnalyzer {
   let lastRepScore: number | null = null;
   let lastRepMs: number | null = null;
   const minRepMs = def.minRepMs ?? 1000;
+  // furthest each side has moved during the rep in progress (alternating exercises)
+  const sidePeak: Record<Side, number | null> = { left: null, right: null };
+  // frame votes for the working side during the rep in progress (lunges)
+  const sideVotes: Record<Side, number> = { left: 0, right: 0 };
   /** How much of the range (start -> full) a peak reached, 0..1. */
   const rangeFraction = (peak: number) => {
     const { startThreshold: start, activeThreshold: active } = def.counter;
@@ -145,6 +188,22 @@ function createRepAnalyzer(def: RepDefinition): ExerciseAnalyzer {
   };
   const moreActive = (a: number, b: number) =>
     def.counter.direction === 'decrease' ? Math.min(a, b) : Math.max(a, b);
+
+  /** Which side the finished rep belongs to, or null when we're not sure. */
+  const creditedSide = (): Side | null => {
+    if (!def.sides) return null;
+    if ('vote' in def.sides) {
+      const total = sideVotes.left + sideVotes.right;
+      if (total < MIN_SIDE_VOTES) return null;
+      if (sideVotes.left / total >= SIDE_MAJORITY) return 'left';
+      if (sideVotes.right / total >= SIDE_MAJORITY) return 'right';
+      return null;
+    }
+    const l = sidePeak.left;
+    const r = sidePeak.right;
+    if (l === null || r === null || Math.abs(l - r) < SIDE_MARGIN) return null;
+    return moreActive(l, r) === l ? 'left' : 'right';
+  };
 
   const addMistake = (message: string) => {
     stats.mistakes[message] = (stats.mistakes[message] ?? 0) + 1;
@@ -189,6 +248,21 @@ function createRepAnalyzer(def: RepDefinition): ExerciseAnalyzer {
 
       if (!event && counter.phase !== 'rest') {
         currentPeak = currentPeak === null ? value : moreActive(currentPeak, value);
+        const sides = def.sides;
+        if (sides && 'vote' in sides) {
+          if (rangeFraction(value) >= VOTE_DEPTH) {
+            const s = sides.vote(lms, frame.aspect);
+            if (s) sideVotes[s]++;
+          }
+        } else if (sides) {
+          for (const s of ['left', 'right'] as const) {
+            const sj = sideJoints(s);
+            if (!isVisible(lms, sides.needs.map((k) => sj[k]))) continue;
+            const v = sides.measure(lms, sj, frame.aspect);
+            const prev = sidePeak[s];
+            sidePeak[s] = prev === null ? v : moreActive(prev, v);
+          }
+        }
       }
 
       if (event) {
@@ -202,6 +276,10 @@ function createRepAnalyzer(def: RepDefinition): ExerciseAnalyzer {
 
         if (event === 'rep') {
           stats.reps++;
+          // Credit the rep to a side only when we're sure (both sides seen, clearly different).
+          const credited = creditedSide();
+          if (credited === 'left') stats.leftReps = (stats.leftReps ?? 0) + 1;
+          else if (credited === 'right') stats.rightReps = (stats.rightReps ?? 0) + 1;
           const formMistakes = repErrors.size;
           const tooFast = minRepMs > 0 && duration < minRepMs;
           if (tooFast) repErrors.add(TOO_FAST.message);
@@ -221,6 +299,10 @@ function createRepAnalyzer(def: RepDefinition): ExerciseAnalyzer {
         }
         stats.formScores.push(lastRepScore);
         repErrors.clear();
+        sidePeak.left = null;
+        sidePeak.right = null;
+        sideVotes.left = 0;
+        sideVotes.right = 0;
       }
 
       const ctx: FrameContext = { lms, joints, aspect: frame.aspect, value, phase: counter.phase };
@@ -249,6 +331,10 @@ function createRepAnalyzer(def: RepDefinition): ExerciseAnalyzer {
       repStartTs = null;
       lastRepScore = null;
       lastRepMs = null;
+      sidePeak.left = null;
+      sidePeak.right = null;
+      sideVotes.left = 0;
+      sideVotes.right = 0;
     },
   };
 }

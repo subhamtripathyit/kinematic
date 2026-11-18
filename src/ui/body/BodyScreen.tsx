@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { t } from '../../i18n';
 import {
   MAX_KG,
   MIN_KG,
@@ -95,7 +96,7 @@ export function BodyScreen() {
     const num = Number(value);
     const kg = fromDisplay(num, unit);
     if (!value || !Number.isFinite(num) || kg < MIN_KG || kg > MAX_KG) {
-      setError(`Enter a weight between ${formatWeight(MIN_KG, unit, 0)} and ${formatWeight(MAX_KG, unit, 0)}.`);
+      setError(t('Enter a weight between {min} and {max}.', { min: formatWeight(MIN_KG, unit, 0), max: formatWeight(MAX_KG, unit, 0) }));
       return;
     }
     if (date > todayKey()) {
@@ -110,13 +111,13 @@ export function BodyScreen() {
 
   const paceText =
     pace === null
-      ? 'Log at least 3 weigh-ins over a week to see your pace'
-      : `${formatChange(pace, unit)} per week (last 8 weeks)`;
+      ? t('Log at least 3 weigh-ins over a week to see your pace')
+      : t('{pace} per week (last 8 weeks)', { pace: formatChange(pace, unit) });
 
   const statusText = (() => {
-    if (progress.reached) return goal.type === 'maintain' ? 'On target 👍' : 'Goal reached! 🎉';
-    if (goal.type === 'maintain') return `${formatWeight(progress.remaining, unit)} outside your target range`;
-    return `${formatWeight(progress.remaining, unit)} to go`;
+    if (progress.reached) return goal.type === 'maintain' ? t('On target 👍') : t('Goal reached! 🎉');
+    if (goal.type === 'maintain') return t('{w} outside your target range', { w: formatWeight(progress.remaining, unit) });
+    return t('{w} to go', { w: formatWeight(progress.remaining, unit) });
   })();
 
   const listed = [...entries].reverse();
@@ -126,16 +127,16 @@ export function BodyScreen() {
     <section className={styles.screen}>
       <div className={styles.headRow}>
         <div>
-          <h1 className={styles.title}>Body</h1>
+          <h1 className={styles.title}>{t('Body')}</h1>
           <p className={styles.muted}>
-            {GOAL_NAMES[goal.type]}
+            {t(GOAL_NAMES[goal.type])}
             {goal.type !== 'maintain' && <> · {formatWeight(goal.startWeightKg, unit)} → {formatWeight(goal.goalWeightKg, unit)}</>}
-            {goal.type === 'maintain' && <> · around {formatWeight(goal.goalWeightKg, unit)}</>}
-            {' '}· started {fmtDate(startDate)} ({weeksIn} week{weeksIn === 1 ? '' : 's'} ago)
+            {goal.type === 'maintain' && <> · {t('around {w}', { w: formatWeight(goal.goalWeightKg, unit) })}</>}
+            {' '}· {t('started {date} ({n} weeks ago)', { date: fmtDate(startDate), n: weeksIn })}
           </p>
         </div>
         <div className={styles.headButtons}>
-          <div className={styles.unitToggle} role="radiogroup" aria-label="Units">
+          <div className={styles.unitToggle} role="radiogroup" aria-label={t('Units')}>
             {(['kg', 'lb'] as const).map((u) => (
               <button key={u} role="radio" aria-checked={unit === u} className={unit === u ? styles.unitActive : ''} onClick={() => update({ ...data, unit: u })}>
                 {u}
@@ -143,7 +144,7 @@ export function BodyScreen() {
             ))}
           </div>
           <button className="btn-secondary" onClick={() => setEditingGoal(true)}>
-            Edit goal
+            {t('Edit goal')}
           </button>
         </div>
       </div>
@@ -165,7 +166,7 @@ export function BodyScreen() {
             </div>
             <div className={styles.barLabels}>
               <span>{formatWeight(goal.startWeightKg, unit)}</span>
-              <span>{Math.round(progress.fraction * 100)}% of the way</span>
+              <span>{t('{p}% of the way', { p: Math.round(progress.fraction * 100) })}</span>
               <span>{formatWeight(goal.goalWeightKg, unit)}</span>
             </div>
           </>
@@ -178,30 +179,30 @@ export function BodyScreen() {
         {goal.type !== 'maintain' && (
           <Stat
             label="Estimated goal date"
-            value={progress.reached ? 'Reached' : eta ? fmtDate(eta) : '–'}
-            hint={eta ? 'At your current pace' : 'Needs a steady trend toward your goal'}
+            value={progress.reached ? t('Reached') : eta ? fmtDate(eta) : '–'}
+            hint={eta ? t('At your current pace') : t('Needs a steady trend toward your goal')}
           />
         )}
         {goal.targetDate && goal.type !== 'maintain' && <Stat label="Your target date" value={fmtDate(parseDay(goal.targetDate))} />}
         {bmiNow !== null && (
           <Stat
             label="BMI"
-            value={`${bmiNow.toFixed(1)} · ${bmiCategory(bmiNow)}`}
-            hint={bmiStart !== null ? `Started at ${bmiStart.toFixed(1)}` : undefined}
+            value={`${bmiNow.toFixed(1)} · ${t(bmiCategory(bmiNow))}`}
+            hint={bmiStart !== null ? t('Started at {v}', { v: bmiStart.toFixed(1) }) : undefined}
           />
         )}
       </div>
 
       {/* add weight */}
       <div className={styles.addCard}>
-        <h2 className={styles.subtitle}>Log your weight</h2>
+        <h2 className={styles.subtitle}>{t('Log your weight')}</h2>
         <div className={styles.addRow}>
           <label className={styles.field}>
-            <span>Date</span>
+            <span>{t('Date')}</span>
             <input type="date" value={date} max={todayKey()} onChange={(e) => setDate(e.target.value)} />
           </label>
           <label className={styles.field}>
-            <span>Weight ({unit})</span>
+            <span>{t('Weight')} ({unit})</span>
             <input
               type="number"
               inputMode="decimal"
@@ -216,21 +217,21 @@ export function BodyScreen() {
             />
           </label>
           <button className="btn-primary" onClick={addWeight}>
-            Add
+            {t('Add')}
           </button>
         </div>
-        <p className={styles.muted}>Tip: weigh yourself at the same time each day, e.g. in the morning before eating. Logging a date again replaces that day's entry.</p>
+        <p className={styles.muted}>{t("Tip: weigh yourself at the same time each day, e.g. in the morning before eating. Logging a date again replaces that day's entry.")}</p>
         {error && <p className={styles.error}>{error}</p>}
       </div>
 
       {/* chart */}
       <div>
         <div className={styles.chartHead}>
-          <h2 className={styles.subtitle}>Progress</h2>
-          <div className={styles.rangeToggle} role="radiogroup" aria-label="Time range">
+          <h2 className={styles.subtitle}>{t('Progress')}</h2>
+          <div className={styles.rangeToggle} role="radiogroup" aria-label={t('Time range')}>
             {RANGES.map((r) => (
-              <button key={r.label} role="radio" aria-checked={range === r.days} className={range === r.days ? styles.unitActive : ''} onClick={() => setRange(r.days)}>
-                {r.label}
+              <button key={(r.label)} role="radio" aria-checked={range === r.days} className={range === r.days ? styles.unitActive : ''} onClick={() => setRange(r.days)}>
+                {t(r.label)}
               </button>
             ))}
           </div>
@@ -238,10 +239,10 @@ export function BodyScreen() {
         <div className={styles.chartCard}>
           <WeightChart entries={entries} goalKg={goal.type === 'maintain' ? goal.goalWeightKg : goal.goalWeightKg} unit={unit} workoutDays={workoutDays} rangeDays={range} />
           <div className={styles.legend}>
-            <span><i className={styles.legendDot} /> weigh-in</span>
-            <span><i className={styles.legendTrend} /> 7-day average</span>
-            <span><i className={styles.legendGoal} /> goal</span>
-            <span><i className={styles.legendWorkout} /> workout day</span>
+            <span><i className={styles.legendDot} /> {t('weigh-in')}</span>
+            <span><i className={styles.legendTrend} /> {t('7-day average')}</span>
+            <span><i className={styles.legendGoal} /> {t('goal')}</span>
+            <span><i className={styles.legendWorkout} /> {t('workout day')}</span>
           </div>
         </div>
       </div>
@@ -266,7 +267,7 @@ export function BodyScreen() {
         </ul>
         {listed.length > 8 && (
           <button className={styles.linkButton} onClick={() => setShowAll((v) => !v)}>
-            {showAll ? 'Show fewer' : `Show all ${listed.length}`}
+            {showAll ? t('Show fewer') : t('Show all {n}', { n: listed.length })}
           </button>
         )}
       </div>
@@ -274,7 +275,7 @@ export function BodyScreen() {
       <div>
         {confirmReset ? (
           <div className={styles.confirm}>
-            <span>Delete your goal and all weigh-ins? This can't be undone (export a backup in History first).</span>
+            <span>{t("Delete your goal and all weigh-ins? This can't be undone (export a backup in History first).")}</span>
             <button
               className="btn-secondary"
               onClick={() => {
@@ -285,12 +286,12 @@ export function BodyScreen() {
               Yes, delete
             </button>
             <button className="btn-secondary" onClick={() => setConfirmReset(false)}>
-              Cancel
+              {t('Cancel')}
             </button>
           </div>
         ) : (
           <button className={styles.linkButton} onClick={() => setConfirmReset(true)}>
-            Reset body tracking
+            {t('Reset body tracking')}
           </button>
         )}
       </div>
@@ -300,10 +301,10 @@ export function BodyScreen() {
 
 function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
-    <div className={styles.stat} title={hint}>
+    <div className={styles.stat} title={hint ? t(hint) : undefined}>
       <span className={styles.statValue}>{value}</span>
-      <span className={styles.muted}>{label}</span>
-      {hint && <span className={styles.statHint}>{hint}</span>}
+      <span className={styles.muted}>{t(label)}</span>
+      {hint && <span className={styles.statHint}>{t(hint)}</span>}
     </div>
   );
 }

@@ -1,5 +1,9 @@
 import type { CameraFacing } from '../engine/camera';
+import type { Lang } from '../i18n';
 import type { WorkoutPlan } from './workoutSession';
+
+export type StartMode = 'countdown' | 'position';
+export const COUNTDOWN_OPTIONS = [3, 5, 10];
 
 /** User preferences, saved in the browser. */
 export interface Settings {
@@ -8,12 +12,26 @@ export interface Settings {
   camera: CameraFacing;
   /** workout days per week to aim for (1-7) */
   weeklyGoal: number;
+  /** how a set starts: a 3-2-1 countdown, or automatically once you're in position */
+  startMode: StartMode;
+  /** countdown length in seconds */
+  countdownSec: number;
+  /** app + voice language */
+  language: Lang;
   /** last plan used per exercise, so setup remembers "3 x 10, 60s rest" */
   plans: Record<string, WorkoutPlan>;
 }
 
 const KEY = 'kinematic.settings.v1';
-const DEFAULTS: Settings = { voiceEnabled: true, camera: 'user', weeklyGoal: 3, plans: {} };
+const DEFAULTS: Settings = {
+  voiceEnabled: true,
+  camera: 'user',
+  weeklyGoal: 3,
+  startMode: 'countdown',
+  countdownSec: 3,
+  language: 'en',
+  plans: {},
+};
 
 export function loadSettings(): Settings {
   try {
@@ -27,6 +45,9 @@ export function loadSettings(): Settings {
         typeof data.weeklyGoal === 'number' && data.weeklyGoal >= 1 && data.weeklyGoal <= 7
           ? Math.round(data.weeklyGoal)
           : DEFAULTS.weeklyGoal,
+      startMode: data.startMode === 'position' ? 'position' : 'countdown',
+      language: data.language === 'hi' ? 'hi' : 'en',
+      countdownSec: COUNTDOWN_OPTIONS.includes(data.countdownSec as number) ? (data.countdownSec as number) : DEFAULTS.countdownSec,
       plans: data.plans && typeof data.plans === 'object' ? data.plans : {},
     };
   } catch {

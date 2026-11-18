@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { t } from '../../i18n';
 import { clearHistory, exportBackup, exportCsv, importBackup, loadHistory, personalBests } from '../../state/history';
 import { describeStats, formatDuration, formScore, type SessionSummary } from '../../state/session';
 import { ProgressChart, type ChartPoint } from '../components/ProgressChart';
@@ -69,7 +70,11 @@ export function HistoryScreen({ onStart, onImported, weeklyGoal, onWeeklyGoalCha
       if (!chartExercise && updated[0]) setChartExercise(updated[0].exerciseId);
       onImported();
       setMessage({
-        text: `Backup restored: ${sessionsAdded} workout${sessionsAdded === 1 ? '' : 's'}, ${routinesAdded} routine${routinesAdded === 1 ? '' : 's'} and ${weighInsAdded} weigh-in${weighInsAdded === 1 ? '' : 's'} added.`,
+        text: t('Backup restored: {w} workouts, {r} routines and {b} weigh-ins added.', {
+          w: sessionsAdded,
+          r: routinesAdded,
+          b: weighInsAdded,
+        }),
       });
     } catch (err) {
       setMessage({ text: err instanceof Error ? err.message : 'Could not import that file.', error: true });
@@ -82,20 +87,20 @@ export function HistoryScreen({ onStart, onImported, weeklyGoal, onWeeklyGoalCha
         <button
           className="btn-primary"
           onClick={() => window.print()}
-          title="Opens the print window: choose “Save as PDF” as the printer"
+          title={t('Opens the print window: choose “Save as PDF” as the printer')}
         >
           Download PDF
         </button>
       )}
       <button className="btn-secondary" onClick={() => download(`kinematic-backup-${today()}.json`, exportBackup(), 'application/json')}>
-        Export backup
+        {t('Export backup')}
       </button>
       <button className="btn-secondary" onClick={() => fileRef.current?.click()}>
-        Import backup
+        {t('Import backup')}
       </button>
       {history.length > 0 && (
         <button className="btn-secondary" onClick={() => download(`kinematic-history-${today()}.csv`, exportCsv(history), 'text/csv')}>
-          Export CSV
+          {t('Export CSV')}
         </button>
       )}
       <input
@@ -115,12 +120,12 @@ export function HistoryScreen({ onStart, onImported, weeklyGoal, onWeeklyGoalCha
   if (history.length === 0) {
     return (
       <section className={styles.empty}>
-        <h1 className={styles.title}>History</h1>
-        <p className={styles.muted}>No workouts saved yet. Finish a workout and it will show up here.</p>
+        <h1 className={styles.title}>{t('History')}</h1>
+        <p className={styles.muted}>{t('No workouts saved yet. Finish a workout and it will show up here.')}</p>
         <button className="btn-primary" onClick={onStart}>
-          Start a workout
+          {t('Start a workout')}
         </button>
-        <p className={styles.muted}>Have a backup from another browser or laptop?</p>
+        <p className={styles.muted}>{t('Have a backup from another browser or laptop?')}</p>
         {backupControls}
         {message && <p className={message.error ? styles.error : styles.success}>{message.text}</p>}
       </section>
@@ -131,9 +136,9 @@ export function HistoryScreen({ onStart, onImported, weeklyGoal, onWeeklyGoalCha
     <section className={styles.screen}>
       <div className={styles.top}>
         <div>
-          <h1 className={styles.title}>History</h1>
+          <h1 className={styles.title}>{t('History')}</h1>
           <p className={styles.muted}>
-            {history.length} workout{history.length === 1 ? '' : 's'} saved in this browser. Export a backup now and then
+            {t('{n} workouts saved in this browser. Export a backup now and then', { n: history.length })}
             so you don't lose them.
           </p>
         </div>
@@ -141,15 +146,14 @@ export function HistoryScreen({ onStart, onImported, weeklyGoal, onWeeklyGoalCha
       </div>
       {message && <p className={message.error ? styles.error : styles.success}>{message.text}</p>}
       <p className={styles.muted}>
-        <strong>Download PDF</strong> gives you a readable workout log (in the print window, pick “Save as PDF”). The
-        backup file is only for moving your data to another browser.
+        <strong>{t('Download PDF')}</strong> {t('gives you a readable workout log (in the print window, pick “Save as PDF”). The backup file is only for moving your data to another browser.')}
       </p>
 
       <ProgressOverview history={history} weeklyGoal={weeklyGoal} onWeeklyGoalChange={onWeeklyGoalChange} />
 
       <div>
         <div className={styles.listHeader}>
-          <h2 className={styles.subtitle}>Progress</h2>
+          <h2 className={styles.subtitle}>{t('Progress')}</h2>
           <div className={styles.controls}>
             <select className={styles.select} value={chartExercise} onChange={(e) => setChartExercise(e.target.value)}>
               {exercises.map(([id, name]) => (
@@ -159,9 +163,9 @@ export function HistoryScreen({ onStart, onImported, weeklyGoal, onWeeklyGoalCha
               ))}
             </select>
             <select className={styles.select} value={metric} onChange={(e) => setMetric(e.target.value as Metric)}>
-              <option value="total">{chartIsHold ? 'Total time held' : 'Total reps'}</option>
-              <option value="best">{chartIsHold ? 'Longest hold' : 'Best set'}</option>
-              <option value="score">Form score</option>
+              <option value="total">{chartIsHold ? t('Total time held') : t('Total reps')}</option>
+              <option value="best">{chartIsHold ? t('Longest hold') : t('Best set')}</option>
+              <option value="score">{t('Form score')}</option>
             </select>
           </div>
         </div>
@@ -169,13 +173,13 @@ export function HistoryScreen({ onStart, onImported, weeklyGoal, onWeeklyGoalCha
       </div>
 
       <div>
-        <h2 className={styles.subtitle}>Personal bests (best single set)</h2>
+        <h2 className={styles.subtitle}>{t('Personal bests (best single set)')}</h2>
         <div className={styles.bests}>
           {bests.map((b) => (
             <div key={b.exerciseId} className={styles.best}>
               <span className={styles.bestValue}>{b.kind === 'hold' ? formatDuration(b.best / 1000) : b.best}</span>
               <span className={styles.bestName}>
-                {b.exerciseName}
+                {t(b.exerciseName)}
                 {b.kind === 'hold' ? '' : ' reps'}
               </span>
             </div>
@@ -185,9 +189,9 @@ export function HistoryScreen({ onStart, onImported, weeklyGoal, onWeeklyGoalCha
 
       <div>
         <div className={styles.listHeader}>
-          <h2 className={styles.subtitle}>Workouts</h2>
+          <h2 className={styles.subtitle}>{t('Workouts')}</h2>
           <select className={styles.select} value={filter} onChange={(e) => setFilter(e.target.value)}>
-            <option value="all">All exercises</option>
+            <option value="all">{t('All exercises')}</option>
             {exercises.map(([id, name]) => (
               <option key={id} value={id}>
                 {name}
@@ -203,9 +207,9 @@ export function HistoryScreen({ onStart, onImported, weeklyGoal, onWeeklyGoalCha
               <li key={h.id} className={styles.item}>
                 <div className={styles.itemMain}>
                   <span className={styles.itemName}>
-                    {h.exerciseName}
+                    {t(h.exerciseName)}
                     {h.routine && <span className={styles.tag}>{h.routine.name}</span>}
-                    {h.plan.mode === 'free' && <span className={styles.tag}>Free</span>}
+                    {h.plan.mode === 'free' && <span className={styles.tag}>{t('Free')}</span>}
                   </span>
                   <span className={styles.muted}>
                     {new Date(h.date).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
@@ -217,7 +221,7 @@ export function HistoryScreen({ onStart, onImported, weeklyGoal, onWeeklyGoalCha
                     {score !== null && <span className={styles.score}> · form {score}</span>}
                   </span>
                   <span className={styles.muted}>
-                    {h.sets.length} set{h.sets.length === 1 ? '' : 's'}:{' '}
+                    {t('{n} sets', { n: h.sets.length })}:{' '}
                     {h.sets.map((s) => (h.kind === 'hold' ? formatDuration(s.stats.holdMs / 1000) : s.stats.reps)).join(' · ')}
                   </span>
                 </div>
@@ -229,13 +233,13 @@ export function HistoryScreen({ onStart, onImported, weeklyGoal, onWeeklyGoalCha
         <PrintLog
           body={loadBody()}
           history={shown}
-          title={filter === 'all' ? 'All exercises' : (exercises.find(([id]) => id === filter)?.[1] ?? '')}
+          title={filter === 'all' ? t('All exercises') : (exercises.find(([id]) => id === filter)?.[1] ?? '')}
         />
 
         <div className={styles.dangerZone}>
           {confirming ? (
             <div className={styles.confirm}>
-              <span>Delete all history? This can't be undone (export a backup first).</span>
+              <span>{t("Delete all history? This can't be undone (export a backup first).")}</span>
               <button
                 className="btn-secondary"
                 onClick={() => {
@@ -247,12 +251,12 @@ export function HistoryScreen({ onStart, onImported, weeklyGoal, onWeeklyGoalCha
                 Yes, delete
               </button>
               <button className="btn-secondary" onClick={() => setConfirming(false)}>
-                Cancel
+                {t('Cancel')}
               </button>
             </div>
           ) : (
             <button className={styles.linkButton} onClick={() => setConfirming(true)}>
-              Clear history
+              {t('Clear history')}
             </button>
           )}
         </div>

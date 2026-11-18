@@ -8,6 +8,13 @@ export type CameraFacing = 'user' | 'environment';
  * - Zooms all the way out on phones that support it, to fit your whole body.
  */
 export async function startCamera(video: HTMLVideoElement, facing: CameraFacing = 'user'): Promise<MediaStream> {
+  const stream = await openCamera(facing);
+  await attachStream(video, stream);
+  return stream;
+}
+
+/** Ask for the camera and return its stream (not attached to any <video> yet). */
+export async function openCamera(facing: CameraFacing = 'user'): Promise<MediaStream> {
   if (!navigator.mediaDevices?.getUserMedia) {
     throw new Error('This browser cannot access the camera. Use Chrome, Edge or Safari, on HTTPS.');
   }
@@ -32,12 +39,15 @@ export async function startCamera(video: HTMLVideoElement, facing: CameraFacing 
   }
 
   await zoomAllTheWayOut(stream);
+  return stream;
+}
 
-  video.srcObject = stream;
+/** Show a stream in a <video> element (reusing it if it's already there). */
+export async function attachStream(video: HTMLVideoElement, stream: MediaStream): Promise<void> {
+  if (video.srcObject !== stream) video.srcObject = stream;
   video.muted = true;
   video.playsInline = true;
   await video.play();
-  return stream;
 }
 
 /** Some phones start slightly zoomed in. Use the widest view the camera allows. */

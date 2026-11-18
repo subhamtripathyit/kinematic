@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { startCamera, stopCamera, type CameraFacing } from '../../engine/camera';
-import { createPoseEngine, type PoseEngine } from '../../engine/pose';
+import { t } from '../../i18n';
+import type { CameraFacing } from '../../engine/camera';
+import type { PoseEngine } from '../../engine/pose';
+import { acquireCamera, getPoseEngine, releaseMedia } from '../../engine/mediaSession';
 import { drawSkeleton } from '../../engine/drawing';
 import { createAnalyzer, getExercise, isHold } from '../../engine/exercises';
 import { emptyStats } from '../../engine/exercises/createAnalyzer';
@@ -8,6 +10,7 @@ import type { ExerciseStats, Feedback, PoseFrame } from '../../engine/types';
 import { VoiceCoach } from '../../engine/voice';
 import { WorkoutSession, type SessionEvent, type SetResult, type WorkoutPlan } from '../../state/workoutSession';
 import { formScore, formatDuration } from '../../state/session';
+import type { StartMode } from '../../state/settings';
 import { RepCounter } from '../components/RepCounter';
 import { FeedbackText } from '../components/FeedbackText';
 import { DebugPanel, type DebugSnapshot } from '../components/DebugPanel';
@@ -31,7 +34,15 @@ interface Props {
   backLabel?: string;
   /** best single set before this workout (reps, or hold ms); 0 = never done */
   previousBest?: number;
+  /** routines: keep the camera + model running when this screen closes (the next exercise reuses them) */
+  keepMediaAlive?: boolean;
+  /** how each set starts */
+  startMode?: StartMode;
+  countdownSec?: number;
 }
+
+/** Before counting starts: a countdown, or waiting for the user to get into position. */
+type GateView = { mode: 'countdown'; remaining: number } | { mode: 'position' } | null;
 
 interface Details {
   lastScore: number | null;
@@ -55,6 +66,7 @@ interface Actions {
   finishSet: () => void;
   endWorkout: () => void;
   skipRest: () => void;
+  skipCountdown: () => void;
 }
 
 export function WorkoutScreen({
@@ -67,9 +79,12 @@ export function WorkoutScreen({
   onBack,
   onFinish,
   contextLabel,
-  endLabel = 'End workout',
-  backLabel = 'Change settings',
+  endLabel,
+  backLabel,
   previousBest = 0,
+  keepMediaAlive = false,
+  startMode = 'countdown',
+  countdownSec = 3,
 }: Props) {
   const exercise = getExercise(exerciseId);
   const hold = isHold(exercise);
@@ -88,11 +103,14 @@ export function WorkoutScreen({
   const [error, setError] = useState<string | null>(null);
   /** reps, or whole seconds held */
   const [count, setCount] = useState(0);
+  const [sides, setSides] = useState({ left: 0, right: 0 });
+  const hasSides = !isHold(exercise) && !!exercise.sides;
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [inFrame, setInFrame] = useState(true);
   /** shape of the camera picture, so the video box matches it (portrait on phones) */
   const [videoAspect, setVideoAspect] = useState<string | null>(null);
   const [pbBanner, setPbBanner] = useState(false);
+  const [gateView, setGateView] = useState<GateView>(null);
   const [view, setView] = useState<SessionView>({ phase: 'working', set: 1, restRemaining: 0 });
 
   const [showMore, setShowMore] = useState(false);
@@ -130,7 +148,6 @@ export function WorkoutScreen({
 
   useEffect(() => {
     let cancelled = false;
-    let stream: MediaStream | null = null;
     let engine: PoseEngine | null = null;
     let rafId = 0;
     let lastVideoTime = -1;
@@ -145,8 +162,40 @@ export function WorkoutScreen({
     let shownInFrame: boolean | null = null;
     let shownRest = -1;
     let shownDetailsKey = '';
+    let shownSides = { left: -1, right: -1 };
     let pbAnnounced = false;
     let pbTimer = 0;
+
+    // Start gate: nothing is counted until it says "Go!".
+    let gate: 'countdown' | 'position' | 'go' = 'go';
+    let gateEndsAt = 0;
+    let shownGateSecond = -1;
+    let positionSince: number | null = null;
+
+    const beginCountdown = (now: number, seconds: number) => {
+      gate = 'countdown';
+      gateEndsAt = now + seconds * 1000;
+      shownGateSecond = -1;
+    };
+    const startGate = (now: number) => {
+      if (startMode === 'position') {
+        gate = 'position';
+        positionSince = null;
+        setGateView({ mode: 'position' });
+        voice.say(t('Get into your starting position.'), { interrupt: true });
+      } else {
+        beginCountdown(now, countdownSec);
+      }
+    };
+    const go = () => {
+      gate = 'go';
+      setGateView(null);
+      analyzer.reset();
+      statsRef.current = emptyStats();
+      shownFeedbackId = undefined;
+      setFeedback(null);
+      voice.say(t('Go!'), { interrupt: true });
+    };
 
     // Frame-rate counter and debug panel throttle.
     let fpsFrames = 0;
@@ -160,6 +209,8 @@ export function WorkoutScreen({
       shownCount = -1;
       shownFeedbackId = undefined;
       shownDetailsKey = '';
+      shownSides = { left: -1, right: -1 };
+      setSides({ left: 0, right: 0 });
       setFeedback(null);
       setDetails(EMPTY_DETAILS);
     };
@@ -175,26 +226,38 @@ export function WorkoutScreen({
       if (!event) return;
       if (event.type === 'set-complete') {
         if (event.isLast) {
-          voice.say(plan.sets > 1 ? 'Workout complete. Great job!' : 'Set complete. Great job!', { interrupt: true });
+          voice.say(plan.sets > 1 ? t('Workout complete. Great job!') : t('Set complete. Great job!'), { interrupt: true });
           finish();
           return;
         }
         resetLiveState();
         if (session.phase === 'working') {
           // No rest: next set starts immediately.
-          voice.say(`Set ${event.setNumber} done. Set ${session.currentSet}, go!`, { interrupt: true });
+          voice.say(t('Set {done} done. Set {next}, go!', { done: event.setNumber, next: session.currentSet }), { interrupt: true });
           setView({ phase: 'working', set: session.currentSet, restRemaining: 0 });
           return;
         }
-        voice.say(`Set ${event.setNumber} done. Rest ${plan.restSec} seconds.`, { interrupt: true });
+        voice.say(t('Set {n} done. Rest {s} seconds.', { n: event.setNumber, s: plan.restSec }), { interrupt: true });
         shownRest = -1;
         setView({ phase: 'resting', set: event.setNumber, restRemaining: session.restRemainingSec(now) });
       } else {
-        voice.say(`Go! Set ${event.nextSet}.`, { interrupt: true });
         resetLiveState();
         setView({ phase: 'working', set: event.nextSet, restRemaining: 0 });
+        if (startMode === 'position') {
+          startGate(now);
+        } else if (restSkipped) {
+          // rest was cut short: give a countdown to get back into position
+          voice.say(t('Set {n}.', { n: event.nextSet }), { interrupt: true });
+          startGate(now);
+        } else {
+          // the rest timer already counted down 3-2-1
+          voice.say(t('Go! Set {n}.', { n: event.nextSet }), { interrupt: true });
+        }
+        restSkipped = false;
       }
     };
+
+    let restSkipped = false;
 
     actionsRef.current = {
       finishSet: () => {
@@ -205,7 +268,13 @@ export function WorkoutScreen({
         session.finishEarly(statsRef.current);
         finish();
       },
-      skipRest: () => handle(session.skipRest(), performance.now()),
+      skipRest: () => {
+        restSkipped = true;
+        handle(session.skipRest(), performance.now());
+      },
+      skipCountdown: () => {
+        if (gate !== 'go') go();
+      },
     };
 
     const loop = () => {
@@ -215,6 +284,19 @@ export function WorkoutScreen({
       const canvas = canvasRef.current;
       if (!video || !canvas || !engine) return;
       const now = performance.now();
+
+      // Countdown runs on the clock.
+      if (gate === 'countdown') {
+        const remaining = Math.max(0, Math.ceil((gateEndsAt - now) / 1000));
+        if (remaining !== shownGateSecond) {
+          shownGateSecond = remaining;
+          if (remaining > 0) {
+            setGateView({ mode: 'countdown', remaining });
+            if (remaining <= 3) voice.say(String(remaining), { interrupt: true });
+          }
+        }
+        if (now >= gateEndsAt) go();
+      }
 
       // Rest countdown runs on the clock, not on video frames.
       if (session.phase === 'resting') {
@@ -258,9 +340,42 @@ export function WorkoutScreen({
         return;
       }
 
+      // Before "Go!": show the skeleton, but don't count anything.
+      if (gate === 'countdown') {
+        if (ctx) drawSkeleton(ctx, frame, true);
+        return;
+      }
+      if (gate === 'position') {
+        const check = analyzer.update(frame);
+        if (ctx) drawSkeleton(ctx, frame, check.inFrame);
+        // ready = whole body visible, and (for rep exercises) standing in the start position
+        const ready = check.inFrame && (hold || check.debug.phase === 'rest');
+        const framingTip = check.feedback && check.feedback.level !== 'good' ? check.feedback : null;
+        const tipId = framingTip?.id ?? null;
+        if (tipId !== shownFeedbackId) {
+          shownFeedbackId = tipId;
+          setFeedback(framingTip);
+          if (framingTip) voice.say(t(framingTip.message), { cooldownMs: 4000 });
+        }
+        if (ready) {
+          positionSince ??= now;
+          if (now - positionSince >= 1000) beginCountdown(now, 3);
+        } else {
+          positionSince = null;
+        }
+        return;
+      }
+
       const result = analyzer.update(frame);
       statsRef.current = result.stats;
       if (ctx) drawSkeleton(ctx, frame, result.inFrame);
+
+      const left = result.stats.leftReps ?? 0;
+      const right = result.stats.rightReps ?? 0;
+      if (left !== shownSides.left || right !== shownSides.right) {
+        shownSides = { left, right };
+        setSides(shownSides);
+      }
 
       const newCount = hold ? Math.floor(result.stats.holdMs / 1000) : result.stats.reps;
       if (newCount !== shownCount) {
@@ -273,7 +388,7 @@ export function WorkoutScreen({
           } else {
             const left = plan.mode === 'plan' ? plan.target - newCount : Infinity;
             if (left > 0 && left <= 3) voice.say(String(left), { interrupt: true });
-            else if (newCount % 10 === 0 && left > 0) voice.say(`${newCount} seconds`, { interrupt: true });
+            else if (newCount % 10 === 0 && left > 0) voice.say(t('{n} seconds', { n: newCount }), { interrupt: true });
           }
         }
       }
@@ -295,7 +410,7 @@ export function WorkoutScreen({
       const setValue = hold ? result.stats.holdMs : result.stats.reps;
       if (!pbAnnounced && previousBest > 0 && setValue > previousBest) {
         pbAnnounced = true;
-        voice.say('New personal best!');
+        voice.say(t('New personal best!'));
         setPbBanner(true);
         pbTimer = window.setTimeout(() => setPbBanner(false), 4000);
       }
@@ -306,7 +421,7 @@ export function WorkoutScreen({
         setFeedback(result.feedback);
         // Speak tips and warnings; "Good rep!" is covered by the rep count.
         if (result.feedback && result.feedback.level !== 'good') {
-          voice.say(result.feedback.message, { cooldownMs: 4000 });
+          voice.say(t(result.feedback.message), { cooldownMs: 4000 });
         }
       }
       if (result.inFrame !== shownInFrame) {
@@ -326,23 +441,20 @@ export function WorkoutScreen({
       try {
         const video = videoRef.current;
         if (!video) return;
-        stream = await startCamera(video, camera);
-        if (cancelled) return stopCamera(stream);
-
-        const created = await createPoseEngine();
-        if (cancelled) {
-          created.close();
-          stopCamera(stream);
-          return;
-        }
+        // Reuses the camera and model if a routine's previous exercise left them running.
+        await acquireCamera(video, camera);
+        if (cancelled) return;
+        const created = await getPoseEngine();
+        if (cancelled) return;
         engine = created;
         startedAtRef.current = Date.now();
         setStatus('running');
-        voice.say(plan.mode === 'plan' && plan.sets > 1 ? `Set 1 of ${plan.sets}. Go!` : 'Go!', { interrupt: true });
+        if (plan.mode === 'plan' && plan.sets > 1) voice.say(t('Set 1 of {n}.', { n: plan.sets }), { interrupt: true });
+        startGate(performance.now());
         rafId = requestAnimationFrame(loop);
       } catch (err) {
         if (cancelled) return;
-        setError(err instanceof Error ? err.message : 'Something went wrong while starting.');
+        setError(err instanceof Error ? err.message : t('Something went wrong while starting.'));
         setStatus('error');
       }
     })();
@@ -350,14 +462,12 @@ export function WorkoutScreen({
     return () => {
       cancelled = true;
       cancelAnimationFrame(rafId);
-      engine?.close();
       engine = null;
-      stopCamera(stream);
-      stream = null;
+      if (!keepMediaAlive) releaseMedia();
       actionsRef.current = null;
       window.clearTimeout(pbTimer);
     };
-  }, [exerciseId, plan, hold, voice, camera, previousBest]);
+  }, [exerciseId, plan, hold, voice, camera, previousBest, keepMediaAlive, startMode, countdownSec]);
 
   const running = status === 'running';
   const resting = running && view.phase === 'resting';
@@ -370,42 +480,62 @@ export function WorkoutScreen({
       >
         <video ref={videoRef} className={`${styles.media} ${camera === 'user' ? styles.mirrored : ''}`} playsInline muted />
         <canvas ref={canvasRef} className={`${styles.media} ${camera === 'user' ? styles.mirrored : ''}`} />
-        {pbBanner && <div className={styles.pbBanner}>New personal best!</div>}
+        {pbBanner && <div className={styles.pbBanner}>{t('New personal best!')}</div>}
         {status !== 'error' && voiceSupported && (
           <button
             className={`${styles.muteButton} ${voiceEnabled ? '' : styles.muted}`}
             onClick={onToggleVoice}
             aria-pressed={!voiceEnabled}
-            title={voiceEnabled ? 'Mute voice coach (M)' : 'Unmute voice coach (M)'}
+            title={voiceEnabled ? t('Mute voice coach (M)') : t('Unmute voice coach (M)')}
           >
             <SpeakerIcon muted={!voiceEnabled} />
-            <span>{voiceEnabled ? 'Mute' : 'Unmute'}</span>
+            <span>{voiceEnabled ? t('Mute') : t('Unmute')}</span>
           </button>
         )}
         {status === 'loading' && (
           <div className={styles.overlay}>
-            <p>Starting the camera and loading the pose model…</p>
-            <p className={styles.small}>Allow camera access if your browser asks.</p>
+            <p>{t('Starting the camera and loading the pose model…')}</p>
+            <p className={styles.small}>{t('Allow camera access if your browser asks.')}</p>
           </div>
         )}
         {status === 'error' && (
           <div className={styles.overlay}>
-            <p>{error}</p>
+            <p>{error ? t(error) : ''}</p>
             <button className="btn-secondary" onClick={onBack}>
-              Back
+              {t('Back')}
+            </button>
+          </div>
+        )}
+        {running && !resting && gateView?.mode === 'countdown' && (
+          <div className={`${styles.overlay} ${styles.countdownOverlay}`}>
+            <p className={styles.restLabel}>{t('Get in position')}</p>
+            <p key={gateView.remaining} className={styles.countdownNumber}>
+              {gateView.remaining}
+            </p>
+            <button className="btn-secondary" onClick={() => actionsRef.current?.skipCountdown()}>
+              {t('Skip countdown')}
+            </button>
+          </div>
+        )}
+        {running && !resting && gateView?.mode === 'position' && (
+          <div className={`${styles.overlay} ${styles.positionOverlay}`}>
+            <p className={styles.restLabel}>{t('Get into your starting position')}</p>
+            <p className={styles.small}>{t("Counting starts when the camera sees you're ready.")}</p>
+            <button className="btn-secondary" onClick={() => actionsRef.current?.skipCountdown()}>
+              {t('Start now')}
             </button>
           </div>
         )}
         {resting && (
           <div className={styles.overlay}>
-            <p className={styles.restLabel}>Rest</p>
+            <p className={styles.restLabel}>{t('Rest')}</p>
             <p className={styles.restTime}>{formatDuration(view.restRemaining)}</p>
             <p className={styles.small}>
               Next: set {view.set + 1}
               {free ? '' : ` of ${plan.sets}`}
             </p>
             <button className="btn-primary" onClick={() => actionsRef.current?.skipRest()}>
-              Skip rest
+              {t('Skip rest')}
             </button>
           </div>
         )}
@@ -415,44 +545,49 @@ export function WorkoutScreen({
         <div className={styles.panelHeader}>
           <div>
             {contextLabel && <p className={styles.context}>{contextLabel}</p>}
-            <h2 className={styles.title}>{exercise.name}</h2>
+            <h2 className={styles.title}>{t(exercise.name)}</h2>
             <p className={styles.setInfo}>
               {free
-                ? `Free workout · set ${view.set}`
-                : `Set ${view.set} of ${plan.sets} · target ${hold ? formatDuration(plan.target) : `${plan.target} reps`}`}
+                ? t('Free workout · set {n}', { n: view.set })
+                : t('Set {n} of {total} · target {target}', {
+                    n: view.set,
+                    total: plan.sets,
+                    target: hold ? formatDuration(plan.target) : t('{n} reps', { n: plan.target }),
+                  })}
             </p>
           </div>
         </div>
-        <p className={styles.hint}>{exercise.setupHint}</p>
+        <p className={styles.hint}>{t(exercise.setupHint)}</p>
 
         <RepCounter
           value={hold ? formatDuration(count) : count}
           target={free ? undefined : hold ? formatDuration(plan.target) : plan.target}
           label={hold ? 'held' : 'reps'}
+          sides={hasSides ? sides : undefined}
         />
-        <FeedbackText feedback={resting ? { id: 'rest', message: 'Resting. Get ready for the next set.', level: 'info' } : feedback} />
+        <FeedbackText feedback={resting ? { id: 'rest', message: t('Resting. Get ready for the next set.'), level: 'info' } : feedback} />
 
         <button className={styles.linkButton} onClick={() => setShowMore((v) => !v)} aria-expanded={showMore}>
-          {showMore ? 'Show less' : 'Show more'}
+          {showMore ? t('Show less') : t('Show more')}
         </button>
         {showMore && (
           <dl className={styles.details}>
             {hold ? (
               <>
-                <dt>Form score (this set)</dt>
+                <dt>{t('Form score (this set)')}</dt>
                 <dd>{details.setScore ?? '–'}</dd>
-                <dt>Time in position</dt>
+                <dt>{t('Time in position')}</dt>
                 <dd>{formatDuration(details.positionMs / 1000)}</dd>
               </>
             ) : (
               <>
-                <dt>Last rep form score</dt>
+                <dt>{t('Last rep form score')}</dt>
                 <dd>{details.lastScore ?? '–'}</dd>
-                <dt>Form score (this set)</dt>
+                <dt>{t('Form score (this set)')}</dt>
                 <dd>{details.setScore ?? '–'}</dd>
-                <dt>Last rep took</dt>
+                <dt>{t('Last rep took')}</dt>
                 <dd>{details.lastRepMs === null ? '–' : `${(details.lastRepMs / 1000).toFixed(1)}s`}</dd>
-                <dt>Time under tension</dt>
+                <dt>{t('Time under tension')}</dt>
                 <dd>{formatDuration(details.tutMs / 1000)}</dd>
               </>
             )}
@@ -466,19 +601,19 @@ export function WorkoutScreen({
             <DebugPanel snapshot={debugSnapshot} counter={exercise.counter} />
           ))}
         <button className={styles.linkButton} onClick={toggleDebug}>
-          {showDebug ? 'Hide' : 'Show'} debug panel (D)
+          {showDebug ? t('Hide') : t('Show')} debug panel (D)
         </button>
 
         <div className={styles.actions}>
           <button className="btn-secondary" onClick={() => actionsRef.current?.finishSet()} disabled={!running || resting}>
-            Finish set
+            {t('Finish set')}
           </button>
           <button className="btn-primary" onClick={() => actionsRef.current?.endWorkout()} disabled={!running}>
-            {endLabel}
+            {endLabel ?? t('End workout')}
           </button>
         </div>
         <button className={styles.linkButton} onClick={onBack}>
-          {backLabel}
+          {backLabel ?? t('Change settings')}
         </button>
         <p className={styles.keys}>Shortcuts: M = mute, D = debug panel</p>
       </aside>

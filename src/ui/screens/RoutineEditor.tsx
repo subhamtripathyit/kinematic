@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { t } from '../../i18n';
 import { exerciseKind, exercisesByCategory, getExercise } from '../../engine/exercises';
 import { newRoutineId, type Routine } from '../../state/routines';
 import styles from './RoutineEditor.module.css';
@@ -70,21 +71,21 @@ export function RoutineEditor({ initial, onSave, onCancel }: Props) {
 
   const save = () => {
     const trimmed = name.trim();
-    if (!trimmed) return setError('Give your routine a name.');
-    if (trimmed.length > 40) return setError('Keep the name under 40 characters.');
-    if (steps.length === 0) return setError('Add at least one exercise.');
-    if (steps.length > 15) return setError('A routine can have at most 15 exercises.');
+    if (!trimmed) return setError(t('Give your routine a name.'));
+    if (trimmed.length > 40) return setError(t('Keep the name under 40 characters.'));
+    if (steps.length === 0) return setError(t('Add at least one exercise.'));
+    if (steps.length > 15) return setError(t('A routine can have at most 15 exercises.'));
 
     for (const [i, s] of steps.entries()) {
       const sets = Number(s.sets);
       const target = Number(s.target);
       const hold = isHoldId(s.exerciseId);
       if (!Number.isInteger(sets) || sets < 1 || sets > 10) {
-        return setError(`Exercise ${i + 1}: sets must be a whole number from 1 to 10.`);
+        return setError(t('Exercise {n}: sets must be a whole number from 1 to 10.', { n: i + 1 }));
       }
       const [min, max] = hold ? [5, 600] : [1, 100];
       if (!Number.isInteger(target) || target < min || target > max) {
-        return setError(`Exercise ${i + 1}: ${hold ? 'seconds' : 'reps'} must be a whole number from ${min} to ${max}.`);
+        return setError(t('Exercise {n}: {what} must be a whole number from {min} to {max}.', { n: i + 1, what: hold ? t('seconds') : t('reps'), min, max }));
       }
     }
 
@@ -102,15 +103,15 @@ export function RoutineEditor({ initial, onSave, onCancel }: Props) {
 
   return (
     <section className={styles.card}>
-      <h1 className={styles.title}>{initial.id ? 'Edit routine' : initial.steps.length ? 'Customize routine' : 'New routine'}</h1>
+      <h1 className={styles.title}>{initial.id ? t('Edit routine') : initial.steps.length ? t('Customize routine') : t('New routine')}</h1>
 
       <div className={styles.row}>
         <label className={styles.field}>
-          <span>Name</span>
+          <span>{t('Name')}</span>
           <input
             value={name}
             maxLength={40}
-            placeholder="e.g. Monday legs"
+            placeholder={t('e.g. Monday legs')}
             onChange={(e) => {
               setName(e.target.value);
               setError(null);
@@ -118,37 +119,37 @@ export function RoutineEditor({ initial, onSave, onCancel }: Props) {
           />
         </label>
         <label className={styles.field}>
-          <span>Rest between exercises</span>
+          <span>{t('Rest between exercises')}</span>
           <select value={restBetween} onChange={(e) => setRestBetween(Number(e.target.value))}>
             {REST_OPTIONS.map((sec) => (
               <option key={sec} value={sec}>
-                {sec === 0 ? 'No rest' : `${sec} seconds`}
+                {sec === 0 ? t('No rest') : t('{n} seconds', { n: sec })}
               </option>
             ))}
           </select>
         </label>
       </div>
       <label className={styles.field}>
-        <span>Description (optional)</span>
+        <span>{t('Description (optional)')}</span>
         <input value={description} maxLength={100} onChange={(e) => setDescription(e.target.value)} />
       </label>
 
       <div className={styles.steps}>
-        <h2 className={styles.subtitle}>Exercises</h2>
-        {steps.length === 0 && <p className={styles.muted}>No exercises yet.</p>}
+        <h2 className={styles.subtitle}>{t('Exercises')}</h2>
+        {steps.length === 0 && <p className={styles.muted}>{t('No exercises yet.')}</p>}
         {steps.map((s, i) => {
           const hold = isHoldId(s.exerciseId);
           return (
             <div key={s.key} className={styles.step}>
               <span className={styles.index}>{i + 1}</span>
               <label className={`${styles.field} ${styles.grow}`}>
-                <span>Exercise</span>
+                <span>{t('Exercise')}</span>
                 <select value={s.exerciseId} onChange={(e) => changeExercise(s.key, e.target.value)}>
                   {groups.map((g) => (
-                    <optgroup key={g.id} label={g.label}>
+                    <optgroup key={g.id} label={t(g.label)}>
                       {g.exercises.map((ex) => (
                         <option key={ex.id} value={ex.id}>
-                          {ex.name}
+                          {t(ex.name)}
                           {ex.kind === 'hold' ? ' (timed)' : ''}
                         </option>
                       ))}
@@ -157,15 +158,15 @@ export function RoutineEditor({ initial, onSave, onCancel }: Props) {
                 </select>
               </label>
               <label className={`${styles.field} ${styles.small}`}>
-                <span>Sets</span>
+                <span>{t('Sets')}</span>
                 <input type="number" min={1} max={10} value={s.sets} onChange={(e) => update(s.key, { sets: e.target.value })} />
               </label>
               <label className={`${styles.field} ${styles.small}`}>
-                <span>{hold ? 'Seconds' : 'Reps'}</span>
+                <span>{hold ? t('Seconds') : t('Reps')}</span>
                 <input type="number" value={s.target} onChange={(e) => update(s.key, { target: e.target.value })} />
               </label>
               <label className={`${styles.field} ${styles.small}`}>
-                <span>Rest</span>
+                <span>{t('Rest')}</span>
                 <select value={s.restSec} onChange={(e) => update(s.key, { restSec: Number(e.target.value) })}>
                   {REST_OPTIONS.map((sec) => (
                     <option key={sec} value={sec}>
@@ -175,16 +176,16 @@ export function RoutineEditor({ initial, onSave, onCancel }: Props) {
                 </select>
               </label>
               <div className={styles.stepButtons}>
-                <button className={styles.iconButton} onClick={() => move(i, -1)} disabled={i === 0} aria-label="Move up">
+                <button className={styles.iconButton} onClick={() => move(i, -1)} disabled={i === 0} aria-label={t('Move up')}>
                   ↑
                 </button>
-                <button className={styles.iconButton} onClick={() => move(i, 1)} disabled={i === steps.length - 1} aria-label="Move down">
+                <button className={styles.iconButton} onClick={() => move(i, 1)} disabled={i === steps.length - 1} aria-label={t('Move down')}>
                   ↓
                 </button>
                 <button
                   className={styles.iconButton}
                   onClick={() => setSteps((list) => list.filter((x) => x.key !== s.key))}
-                  aria-label="Remove"
+                  aria-label={t('Remove')}
                 >
                   ✕
                 </button>
@@ -193,7 +194,7 @@ export function RoutineEditor({ initial, onSave, onCancel }: Props) {
           );
         })}
         <button className="btn-secondary" onClick={addStep}>
-          + Add exercise
+          {t('+ Add exercise')}
         </button>
       </div>
 
@@ -201,10 +202,10 @@ export function RoutineEditor({ initial, onSave, onCancel }: Props) {
 
       <div className={styles.actions}>
         <button className="btn-secondary" onClick={onCancel}>
-          Cancel
+          {t('Cancel')}
         </button>
         <button className="btn-primary" onClick={save}>
-          Save routine
+          {t('Save routine')}
         </button>
       </div>
     </section>

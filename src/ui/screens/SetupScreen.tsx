@@ -1,8 +1,11 @@
 import { useState } from 'react';
+import { t } from '../../i18n';
 import { CATEGORIES, getExercise, isHold } from '../../engine/exercises';
 import type { WorkoutPlan } from '../../state/workoutSession';
 import type { CameraFacing } from '../../engine/camera';
 import { CameraPicker } from '../components/CameraPicker';
+import { StartPicker } from '../components/StartPicker';
+import type { StartMode } from '../../state/settings';
 import { FormDemo } from '../demo/FormDemo';
 import styles from './SetupScreen.module.css';
 
@@ -14,6 +17,9 @@ interface Props {
   onToggleVoice: () => void;
   camera: CameraFacing;
   onCameraChange: (camera: CameraFacing) => void;
+  startMode: StartMode;
+  countdownSec: number;
+  onStartModeChange: (mode: StartMode, seconds: number) => void;
   onStart: (plan: WorkoutPlan) => void;
   onBack: () => void;
 }
@@ -29,6 +35,9 @@ export function SetupScreen({
   onToggleVoice,
   camera,
   onCameraChange,
+  startMode,
+  countdownSec,
+  onStartModeChange,
   onStart,
   onBack,
 }: Props) {
@@ -52,39 +61,39 @@ export function SetupScreen({
       return;
     }
     const s = Number(sets);
-    const t = Number(target);
+    const targetNum = Number(target);
     if (!Number.isInteger(s) || s < 1 || s > 10) {
-      setError('Sets must be a whole number from 1 to 10.');
+      setError(t('Sets must be a whole number from 1 to 10.'));
       return;
     }
-    if (!Number.isInteger(t) || t < limits.min || t > limits.max) {
+    if (!Number.isInteger(targetNum) || targetNum < limits.min || targetNum > limits.max) {
       setError(
         hold
-          ? `Hold time must be a whole number from ${limits.min} to ${limits.max} seconds.`
-          : `Reps must be a whole number from ${limits.min} to ${limits.max}.`,
+          ? t('Hold time must be a whole number from {min} to {max} seconds.', { min: limits.min, max: limits.max })
+          : t('Reps must be a whole number from {min} to {max}.', { min: limits.min, max: limits.max }),
       );
       return;
     }
-    onStart({ mode: 'plan', sets: s, target: t, restSec: rest });
+    onStart({ mode: 'plan', sets: s, target: targetNum, restSec: rest });
   };
 
   return (
     <section className={styles.card}>
       <div>
         <p className={styles.eyebrow}>
-          {category} · {exercise.cameraView === 'side' ? 'Side view' : 'Front view'}
+          {category ? t(category) : ''} · {exercise.cameraView === 'side' ? t('Side view') : t('Front view')}
           {hold ? ' · Timed hold' : ''}
         </p>
-        <h1 className={styles.title}>{exercise.name}</h1>
-        <p className={styles.hint}>{exercise.setupHint}</p>
+        <h1 className={styles.title}>{t(exercise.name)}</h1>
+        <p className={styles.hint}>{t(exercise.setupHint)}</p>
         <button className={styles.demoButton} onClick={() => setShowDemo((v) => !v)} aria-expanded={showDemo}>
-          {showDemo ? 'Hide demo' : 'How to do it'}
+          {showDemo ? t('Hide demo') : t('How to do it')}
         </button>
       </div>
 
       {showDemo && <FormDemo exerciseId={exerciseId} speakOnOpen={voiceEnabled && voiceSupported} />}
 
-      <div className={styles.modes} role="radiogroup" aria-label="Workout type">
+      <div className={styles.modes} role="radiogroup" aria-label={t('Workout type')}>
         <button
           role="radio"
           aria-checked={mode === 'plan'}
@@ -105,21 +114,20 @@ export function SetupScreen({
             setError(null);
           }}
         >
-          <span className={styles.modeTitle}>Free workout</span>
-          <span className={styles.modeHint}>{hold ? 'Hold as long as you can' : 'As many reps as you want'}, no target</span>
+          <span className={styles.modeTitle}>{t('Free workout')}</span>
+          <span className={styles.modeHint}>{hold ? t('Hold as long as you can') : t('As many reps as you want')}, no target</span>
         </button>
       </div>
 
       {mode === 'free' ? (
         <p className={styles.freeNote}>
-          {hold ? 'The timer runs as long as your form is good.' : 'Every rep is counted, with no limit.'} Press{' '}
-          <strong>Finish set</strong> to log a set and start the next one, and <strong>End workout</strong> when
-          you're done.
+          {hold ? t('The timer runs as long as your form is good.') : t('Every rep is counted, with no limit.')} Press{' '}
+          <strong>{t('Finish set')}</strong> {t('to log a set and start the next one, and')} <strong>{t('End workout')}</strong> {t("when you're done.")}
         </p>
       ) : (
       <div className={styles.fields}>
         <label className={styles.field}>
-          <span>Sets</span>
+          <span>{t('Sets')}</span>
           <input
             type="number"
             min={1}
@@ -132,7 +140,7 @@ export function SetupScreen({
           />
         </label>
         <label className={styles.field}>
-          <span>{hold ? 'Seconds per set' : 'Reps per set'}</span>
+          <span>{hold ? t('Seconds per set') : t('Reps per set')}</span>
           <input
             type="number"
             min={limits.min}
@@ -145,11 +153,11 @@ export function SetupScreen({
           />
         </label>
         <label className={styles.field}>
-          <span>Rest between sets</span>
+          <span>{t('Rest between sets')}</span>
           <select value={rest} onChange={(e) => setRest(Number(e.target.value))}>
             {REST_OPTIONS.map((sec) => (
               <option key={sec} value={sec}>
-                {sec === 0 ? 'No rest' : `${sec} seconds`}
+                {sec === 0 ? t('No rest') : t('{n} seconds', { n: sec })}
               </option>
             ))}
           </select>
@@ -158,15 +166,16 @@ export function SetupScreen({
       )}
 
       <CameraPicker value={camera} onChange={onCameraChange} />
+      <StartPicker mode={startMode} seconds={countdownSec} onChange={onStartModeChange} />
 
       <label className={styles.toggle}>
         <input type="checkbox" checked={voiceEnabled && voiceSupported} disabled={!voiceSupported} onChange={onToggleVoice} />
         <span>
-          Voice coach
+          {t('Voice coach')}
           <span className={styles.toggleHint}>
             {voiceSupported
-              ? 'Reads out your rep count, tips like "Go deeper" and the rest countdown.'
-              : 'Not supported in this browser. Use Chrome or Edge.'}
+              ? t('Reads out your rep count, tips like "Go deeper" and the rest countdown.')
+              : t('Not supported in this browser. Use Chrome or Edge.')}
           </span>
         </span>
       </label>
@@ -175,10 +184,10 @@ export function SetupScreen({
 
       <div className={styles.actions}>
         <button className="btn-secondary" onClick={onBack}>
-          Back
+          {t('Back')}
         </button>
         <button className="btn-primary" onClick={start}>
-          Start workout
+          {t('Start workout')}
         </button>
       </div>
     </section>
