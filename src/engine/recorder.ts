@@ -20,6 +20,10 @@ export interface Hud {
 }
 
 export interface Recording {
+  /** true if the microphone was recorded too */
+  hasSound: boolean;
+  /** sound was asked for but the microphone wasn't allowed or available */
+  soundBlocked: boolean;
   url: string;
   blob: Blob;
   fileName: string;
@@ -33,11 +37,26 @@ const BITRATE = 1_500_000;
 /** Stop recording after this, so a forgotten tab can't fill the phone's memory. */
 const MAX_DURATION_MS = 90 * 60 * 1000;
 
-const TYPES = ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+const VIDEO_TYPES = ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+const SOUND_TYPES = ['video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
 
-function pickType(): string | null {
+function pickType(withSound = false): string | null {
   if (typeof MediaRecorder === 'undefined') return null;
-  return TYPES.find((type) => MediaRecorder.isTypeSupported(type)) ?? null;
+  return (withSound ? SOUND_TYPES : VIDEO_TYPES).find((type) => MediaRecorder.isTypeSupported(type)) ?? null;
+}
+
+/**
+ * The microphone, tuned to keep the coach's voice: echo cancellation would
+ * remove the speaker sound, which is exactly what we want to hear.
+ */
+async function openMic(): Promise<MediaStream | null> {
+  try {
+    return await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: true },
+    });
+  } catch {
+    return null;
+  }
 }
 
 /** Can this browser record the session? */
@@ -54,25 +73,46 @@ class SessionRecorder {
   private pausedAt = 0;
   private pausedMs = 0;
   private last: Recording | null = null;
+  private mic: MediaStream | null = null;
+  private soundBlocked = false;
+  private starting: Promise<void> | null = null;
 
   /** true from start() until stop() or discard() */
   get active(): boolean {
     return this.media !== null;
   }
 
-  /** Start a new recording, or carry on with the paused one (next exercise of a routine). */
-  begin(): void {
+  /**
+   * Start a new recording, or carry on with the paused one (next exercise of a routine).
+   * withSound: also record the microphone (asks for permission the first time).
+   */
+  async begin(withSound = false): Promise<void> {
+    if (this.starting) return this.starting;
     if (this.media) {
       this.resume();
       return;
     }
-    const type = pickType();
-    if (!type) return;
+    this.starting = this.start(withSound).finally(() => {
+      this.starting = null;
+    });
+    return this.starting;
+  }
+
+  private async start(withSound: boolean): Promise<void> {
     this.clearLast();
+    this.soundBlocked = false;
+    this.mic = withSound ? await openMic() : null;
+    if (withSound && !this.mic) this.soundBlocked = true;
+    const type = pickType(this.mic !== null);
+    if (!type) {
+      this.stopMic();
+      return;
+    }
     this.canvas = document.createElement('canvas');
     this.canvas.width = 640;
     this.canvas.height = 480;
     const stream = this.canvas.captureStream(30);
+    this.mic?.getAudioTracks().forEach((track) => stream.addTrack(track));
     this.type = type;
     this.chunks = [];
     this.media = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: BITRATE });
@@ -154,12 +194,14 @@ class SessionRecorder {
     });
     this.media = null;
     this.canvas = null;
+    const hasSound = this.mic !== null;
+    this.stopMic();
     const blob = new Blob(this.chunks, { type: this.type.split(';')[0] });
     this.chunks = [];
     if (blob.size === 0) return null;
     const ext = this.type.startsWith('video/mp4') ? 'mp4' : 'webm';
     const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
-    this.last = { url: URL.createObjectURL(blob), blob, fileName: `kinematic-${stamp}.${ext}`, sizeBytes: blob.size, durationMs };
+    this.last = { hasSound, soundBlocked: this.soundBlocked, url: URL.createObjectURL(blob), blob, fileName: `kinematic-${stamp}.${ext}`, sizeBytes: blob.size, durationMs };
     return this.last;
   }
 
@@ -172,6 +214,13 @@ class SessionRecorder {
     this.media = null;
     this.canvas = null;
     this.chunks = [];
+    this.stopMic();
+  }
+
+  /** Turn the microphone off (its light on the device goes out). */
+  private stopMic(): void {
+    this.mic?.getTracks().forEach((track) => track.stop());
+    this.mic = null;
   }
 
   private clearLast(): void {

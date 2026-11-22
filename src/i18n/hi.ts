@@ -569,4 +569,7 @@ export const HI: Record<string, string> = {
   "For a weight-gain goal, the goal weight must be above your current weight.": "वज़न बढ़ाने के लक्ष्य में, लक्ष्य वज़न आपके मौजूदा वज़न से ज़्यादा होना चाहिए।",
   "Weight unit": "वज़न की इकाई",
   "Height unit": "लंबाई की इकाई",
+  "Include sound (microphone)": "आवाज़ भी रिकॉर्ड करें (माइक्रोफ़ोन)",
+  "Records your voice and the coach's voice from the speaker. Your browser will ask to use the microphone. With headphones, the coach's voice isn't recorded.": "आपकी आवाज़ और स्पीकर से कोच की आवाज़ रिकॉर्ड करता है। ब्राउज़र माइक्रोफ़ोन की अनुमति माँगेगा। हेडफ़ोन लगाने पर कोच की आवाज़ रिकॉर्ड नहीं होगी।",
+  "The microphone wasn't allowed, so this video has no sound.": "माइक्रोफ़ोन की अनुमति नहीं मिली, इसलिए इस वीडियो में आवाज़ नहीं है।",
 };

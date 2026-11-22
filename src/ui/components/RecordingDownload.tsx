@@ -35,6 +35,9 @@ export function RecordingDownload() {
           {formatDuration(Math.round(rec.durationMs / 1000))} · {mb} MB ·{' '}
           {t("It isn't saved anywhere else: download it before you leave this screen.")}
         </p>
+        {rec.soundBlocked && (
+          <p className={styles.muted}>{t("The microphone wasn't allowed, so this video has no sound.")}</p>
+        )}
       </div>
       <a className="btn-primary" href={rec.url} download={rec.fileName}>
         {t('Download video')}

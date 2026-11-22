@@ -67,6 +67,7 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'picker' });
   // "Record this session": asked before each workout, off by default
   const [record, setRecord] = useState(false);
+  const [recordSound, setRecordSound] = useState(false);
   // a recording only lives through the workout and its summary; anywhere else it's dropped
   useEffect(() => {
     if (!['workout', 'summary', 'routine-run', 'routine-summary'].includes(screen.name)) sessionRecorder.discard();
@@ -210,6 +211,8 @@ export default function App() {
             onStartModeChange={(startMode, countdownSec) => updateSettings({ startMode, countdownSec })}
             record={record}
             onRecordChange={setRecord}
+            recordSound={recordSound}
+            onRecordSoundChange={setRecordSound}
             onBack={() => setScreen({ name: 'picker' })}
             onStart={(plan) => startWorkout(screen.exerciseId, plan)}
           />
@@ -225,6 +228,7 @@ export default function App() {
             countdownSec={settings.countdownSec}
             previousBest={screen.previousBest}
             record={record}
+            recordSound={recordSound}
             voiceEnabled={settings.voiceEnabled}
             voiceSupported={voiceSupported}
             onToggleVoice={toggleVoice}
@@ -288,6 +292,8 @@ export default function App() {
             level={settings.routineLevel ?? 3}
             record={record}
             onRecordChange={setRecord}
+            recordSound={recordSound}
+            onRecordSoundChange={setRecordSound}
             onExerciseDone={(summary) => saveSession(summary)}
             onFinish={(results, completed) => {
               const after = loadHistory();

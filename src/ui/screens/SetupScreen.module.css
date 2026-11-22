@@ -166,3 +166,8 @@
 .demoButton:hover {
   background: var(--surface-2);
 }
+
+/* option that belongs to the one above it (e.g. sound under "Record this session") */
+.subToggle {
+  margin-left: 30px;
+}

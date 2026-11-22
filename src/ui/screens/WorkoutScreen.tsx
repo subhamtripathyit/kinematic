@@ -46,6 +46,8 @@ interface Props {
   level?: Level;
   /** "Record session": draw this workout into the shared recording */
   record?: boolean;
+  /** also record the microphone */
+  recordSound?: boolean;
 }
 
 /** Before counting starts: a countdown, or waiting for the user to get into position. */
@@ -95,6 +97,7 @@ export function WorkoutScreen({
   countdownSec = 3,
   level,
   record = false,
+  recordSound = false,
 }: Props) {
   const exercise = getExercise(exerciseId);
   const hold = isHold(exercise);
@@ -492,7 +495,7 @@ export function WorkoutScreen({
         engine = created;
         startedAtRef.current = Date.now();
         setStatus('running');
-        if (record) sessionRecorder.begin();
+        if (record) void sessionRecorder.begin(recordSound);
         if (plan.mode === 'plan' && plan.sets > 1) voice.say(t('Set 1 of {n}.', { n: plan.sets }), { interrupt: true });
         startGate(performance.now());
         rafId = requestAnimationFrame(loop);
@@ -513,7 +516,7 @@ export function WorkoutScreen({
       actionsRef.current = null;
       window.clearTimeout(pbTimer);
     };
-  }, [exerciseId, plan, hold, voice, camera, previousBest, keepMediaAlive, startMode, countdownSec, level, record]);
+  }, [exerciseId, plan, hold, voice, camera, previousBest, keepMediaAlive, startMode, countdownSec, level, record, recordSound]);
 
   const running = status === 'running';
   const resting = running && view.phase === 'resting';

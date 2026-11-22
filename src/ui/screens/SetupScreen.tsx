@@ -24,6 +24,8 @@ interface Props {
   onStartModeChange: (mode: StartMode, seconds: number) => void;
   record: boolean;
   onRecordChange: (record: boolean) => void;
+  recordSound: boolean;
+  onRecordSoundChange: (sound: boolean) => void;
   onStart: (plan: WorkoutPlan) => void;
   onBack: () => void;
 }
@@ -44,6 +46,8 @@ export function SetupScreen({
   onStartModeChange,
   record,
   onRecordChange,
+  recordSound,
+  onRecordSoundChange,
   onStart,
   onBack,
 }: Props) {
@@ -175,7 +179,7 @@ export function SetupScreen({
       <StartPicker mode={startMode} seconds={countdownSec} onChange={onStartModeChange} />
 
       <VoiceToggle enabled={voiceEnabled} supported={voiceSupported} onToggle={onToggleVoice} />
-      <RecordToggle enabled={record} onChange={onRecordChange} />
+      <RecordToggle enabled={record} onChange={onRecordChange} sound={recordSound} onSoundChange={onRecordSoundChange} />
 
       {error && <p className={styles.error}>{error}</p>}
 

@@ -33,6 +33,8 @@ interface Props {
   level: Level;
   record: boolean;
   onRecordChange: (record: boolean) => void;
+  recordSound: boolean;
+  onRecordSoundChange: (sound: boolean) => void;
   /** called after each exercise with progress, so it's saved even if the routine is stopped early */
   onExerciseDone: (summary: SessionSummary) => void;
   onFinish: (results: SessionSummary[], completed: boolean) => void;
@@ -52,6 +54,8 @@ export function RoutineRunner({
   level,
   record,
   onRecordChange,
+  recordSound,
+  onRecordSoundChange,
   onExerciseDone,
   onFinish,
 }: Props) {
@@ -101,6 +105,8 @@ export function RoutineRunner({
         level={level}
         record={record}
         onRecordChange={onRecordChange}
+        recordSound={recordSound}
+        onRecordSoundChange={onRecordSoundChange}
         onStart={() => setPhase('working')}
         onSkip={() => goNext(results)}
         onEnd={() => onFinish(results, false)}
@@ -117,6 +123,7 @@ export function RoutineRunner({
       keepMediaAlive
       level={level}
       record={record}
+      recordSound={recordSound}
       startMode={startMode}
       countdownSec={countdownSec}
       voiceEnabled={voiceEnabled}
@@ -159,6 +166,8 @@ interface UpNextProps {
   level: Level;
   record: boolean;
   onRecordChange: (record: boolean) => void;
+  recordSound: boolean;
+  onRecordSoundChange: (sound: boolean) => void;
   onStart: () => void;
   onSkip: () => void;
   onEnd: () => void;
@@ -179,6 +188,8 @@ function UpNext({
   level,
   record,
   onRecordChange,
+  recordSound,
+  onRecordSoundChange,
   onStart,
   onSkip,
   onEnd,
@@ -270,7 +281,7 @@ function UpNext({
       {isFirst && <CameraPicker value={camera} onChange={onCameraChange} />}
       {isFirst && <StartPicker mode={startMode} seconds={countdownSec} onChange={onStartModeChange} />}
       <VoiceToggle enabled={voiceEnabled} supported={voiceSupported} onToggle={onToggleVoice} />
-      {isFirst && <RecordToggle enabled={record} onChange={onRecordChange} />}
+      {isFirst && <RecordToggle enabled={record} onChange={onRecordChange} sound={recordSound} onSoundChange={onRecordSoundChange} />}
 
       <div className={styles.actions}>
         <button className="btn-primary" onClick={onStart}>
