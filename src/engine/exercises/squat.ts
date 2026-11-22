@@ -7,7 +7,7 @@ export const squat: RepDefinition = {
   name: 'Squat',
   category: 'legs',
   cameraView: 'side',
-  setupHint: 'Stand side-on to the laptop, 2–3 m away, with your whole body in view.',
+  setupHint: 'Stand side-on to the camera, 2–3 m away, with your whole body in view.',
   requiredJoints: ['shoulder', 'hip', 'knee', 'ankle'],
   // Knee angle: ~175° standing, ~90° at parallel.
   measure: (lms, j, aspect) => angleAt(lms[j.hip], lms[j.knee], lms[j.ankle], aspect),

@@ -7,7 +7,7 @@ export const situp: RepDefinition = {
   name: 'Sit-up',
   category: 'core',
   cameraView: 'side',
-  setupHint: 'Lie side-on to the laptop with it on the floor, about 2 m away, knees bent.',
+  setupHint: 'Lie side-on to the camera with it on the floor, about 2 m away, knees bent.',
   requiredJoints: ['shoulder', 'hip', 'knee'],
   // Torso angle off the floor: ~0–10° lying, 60°+ sitting up.
   measure: (lms, j, aspect) => elevationDeg(lms[j.hip], lms[j.shoulder], aspect),

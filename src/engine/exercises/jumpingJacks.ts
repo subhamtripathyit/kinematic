@@ -8,7 +8,7 @@ export const jumpingJacks: RepDefinition = {
   name: 'Jumping jacks',
   category: 'cardio',
   cameraView: 'front',
-  setupHint: 'Face the laptop, 2.5–3 m away, so your whole body including raised arms is in view.',
+  setupHint: 'Face the camera, 2.5–3 m away, so your whole body including raised arms is in view.',
   requiredJoints: ['shoulder', 'wrist', 'hip', 'ankle'],
   // Arm angle from the body (lower arm decides): ~15° at the sides, ~160° overhead.
   measure: (lms, j, aspect) =>

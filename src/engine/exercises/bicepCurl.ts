@@ -8,7 +8,7 @@ export const bicepCurl: RepDefinition = {
   name: 'Bicep curl',
   category: 'arms',
   cameraView: 'side',
-  setupHint: 'Stand side-on to the laptop, 2–3 m away, with your upper body and hips in view.',
+  setupHint: 'Stand side-on to the camera, 2–3 m away, with your upper body and hips in view.',
   requiredJoints: ['shoulder', 'elbow', 'wrist', 'hip'],
   // Elbow angle of the working arm: ~165° arm down, ~45° fully curled.
   measure: (lms, j, aspect) =>

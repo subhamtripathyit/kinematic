@@ -7,7 +7,7 @@ export const crunch: RepDefinition = {
   name: 'Crunch',
   category: 'core',
   cameraView: 'side',
-  setupHint: 'Lie side-on to the laptop with it on the floor, about 2 m away, knees bent.',
+  setupHint: 'Lie side-on to the camera with it on the floor, about 2 m away, knees bent.',
   requiredJoints: ['shoulder', 'hip', 'knee'],
   // How far the torso lifts off the floor: ~0–10° lying flat, 30°+ at the top of a crunch.
   measure: (lms, j, aspect) => elevationDeg(lms[j.hip], lms[j.shoulder], aspect),

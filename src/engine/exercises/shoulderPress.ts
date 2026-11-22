@@ -7,7 +7,7 @@ export const shoulderPress: RepDefinition = {
   name: 'Shoulder press',
   category: 'shoulders',
   cameraView: 'front',
-  setupHint: 'Face the laptop, 2–3 m away, with your head, arms and hips in view. Start with hands at shoulder height.',
+  setupHint: 'Face the camera, 2–3 m away, with your head, arms and hips in view. Start with hands at shoulder height.',
   requiredJoints: ['shoulder', 'elbow', 'wrist'],
   // Elbow angle of the weaker arm: ~80–90° at the bottom, ~170° locked out.
   measure: (lms, j, aspect) =>

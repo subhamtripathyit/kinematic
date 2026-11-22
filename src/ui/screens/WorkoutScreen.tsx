@@ -18,6 +18,7 @@ import styles from './WorkoutScreen.module.css';
 import { MAX_REST_SEC, RestAdjust } from '../components/RestAdjust';
 import type { Level } from '../../engine/exercises/levels';
 import { sessionRecorder, type Hud } from '../../engine/recorder';
+import { useWakeLock } from '../components/useWakeLock';
 
 interface Props {
   exerciseId: string;
@@ -520,6 +521,8 @@ export function WorkoutScreen({
 
   const running = status === 'running';
   const resting = running && view.phase === 'resting';
+  // keep the phone screen on during the workout
+  useWakeLock(status !== 'error');
 
   return (
     <div className={styles.layout}>
@@ -530,6 +533,25 @@ export function WorkoutScreen({
         <video ref={videoRef} className={`${styles.media} ${camera === 'user' ? styles.mirrored : ''}`} playsInline muted />
         <canvas ref={canvasRef} className={`${styles.media} ${camera === 'user' ? styles.mirrored : ''}`} />
         {pbBanner && <div className={styles.pbBanner}>{t('New personal best!')}</div>}
+        {/* Phones: the count and tips sit on the video, readable from 2–3 m away (the panel is below the video there). */}
+        {running && !resting && !gateView && (
+          <div className={styles.mobileHud} aria-hidden="true">
+            <span className={styles.hudCount}>
+              {hold ? formatDuration(count) : count}
+              {!free && <span className={styles.hudTarget}>/{hold ? formatDuration(plan.target) : plan.target}</span>}
+            </span>
+            <span className={styles.hudSet}>
+              {t('Set')} {view.set}
+              {free ? '' : `/${plan.sets}`}
+              {hasSides ? ` · ${t('Left')} ${sides.left} · ${t('Right')} ${sides.right}` : ''}
+            </span>
+          </div>
+        )}
+        {running && !resting && !gateView && feedback && (
+          <div className={`${styles.mobileTip} ${styles[`tip_${feedback.level}`]}`} aria-hidden="true">
+            {t(feedback.message)}
+          </div>
+        )}
         {status !== 'error' && voiceSupported && (
           <button
             className={`${styles.muteButton} ${voiceEnabled ? '' : styles.muted}`}
@@ -607,7 +629,7 @@ export function WorkoutScreen({
             </p>
           </div>
         </div>
-        <p className={styles.hint}>{t(exercise.setupHint)}</p>
+        <p className={`${styles.hint} ${styles.hideOnPhone}`}>{t(exercise.setupHint)}</p>
 
         <RepCounter
           value={hold ? formatDuration(count) : count}
@@ -650,7 +672,7 @@ export function WorkoutScreen({
           ) : (
             <DebugPanel snapshot={debugSnapshot} counter={exercise.counter} />
           ))}
-        <button className={styles.linkButton} onClick={toggleDebug}>
+        <button className={`${styles.linkButton} ${styles.hideOnPhone}`} onClick={toggleDebug}>
           {showDebug ? t('Hide') : t('Show')} debug panel (D)
         </button>
 
@@ -665,7 +687,7 @@ export function WorkoutScreen({
         <button className={styles.linkButton} onClick={onBack}>
           {backLabel ?? t('Change settings')}
         </button>
-        <p className={styles.keys}>Shortcuts: M = mute, D = debug panel</p>
+        <p className={`${styles.keys} ${styles.hideOnPhone}`}>Shortcuts: M = mute, D = debug panel</p>
       </aside>
     </div>
   );

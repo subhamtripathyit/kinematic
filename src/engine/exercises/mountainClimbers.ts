@@ -8,7 +8,7 @@ export const mountainClimbers: RepDefinition = {
   name: 'Mountain climbers',
   category: 'cardio',
   cameraView: 'side',
-  setupHint: 'Get into a high plank side-on to the laptop (on the floor, ~2 m away), whole body in view.',
+  setupHint: 'Get into a high plank side-on to the camera (on the floor, ~2 m away), whole body in view.',
   requiredJoints: ['shoulder', 'hip', 'knee', 'ankle'],
   // Hip angle of the driving leg: ~165° leg back, ~90° knee at chest.
   measure: (lms, j, aspect) =>

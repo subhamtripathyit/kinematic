@@ -10,7 +10,7 @@ export const lunge: RepDefinition = {
   name: 'Lunge',
   category: 'legs',
   cameraView: 'side',
-  setupHint: 'Stand side-on to the laptop, 2–3 m away, with your whole body in view. Alternate legs.',
+  setupHint: 'Stand side-on to the camera, 2–3 m away, with your whole body in view. Alternate legs.',
   requiredJoints: ['shoulder', 'hip', 'knee', 'ankle'],
   // Front knee angle (the more-bent knee): ~175° standing, ~90° at the bottom.
   // The far leg is partly hidden in a side view, so it's accepted at lower visibility:

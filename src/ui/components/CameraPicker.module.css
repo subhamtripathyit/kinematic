@@ -52,3 +52,10 @@
 .tip strong {
   color: var(--text);
 }
+
+/* touch screens: a thumb needs ~44px */
+@media (pointer: coarse) {
+  .option {
+    min-height: 44px;
+  }
+}

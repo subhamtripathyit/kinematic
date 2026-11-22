@@ -7,7 +7,7 @@ export const lateralRaise: RepDefinition = {
   name: 'Lateral raise',
   category: 'shoulders',
   cameraView: 'front',
-  setupHint: 'Face the laptop, 2–3 m away, with your arms and hips in view.',
+  setupHint: 'Face the camera, 2–3 m away, with your arms and hips in view.',
   requiredJoints: ['shoulder', 'elbow', 'wrist', 'hip'],
   // Arm angle from the body (hip-shoulder-wrist): ~15° arms down, ~90° at shoulder height.
   measure: (lms, j, aspect) =>

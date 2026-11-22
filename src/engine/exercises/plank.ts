@@ -8,7 +8,7 @@ export const plank: HoldDefinition = {
   name: 'Plank',
   category: 'core',
   cameraView: 'side',
-  setupHint: 'Get into a forearm or high plank side-on to the laptop (on the floor, ~2 m away), whole body in view.',
+  setupHint: 'Get into a forearm or high plank side-on to the camera (on the floor, ~2 m away), whole body in view.',
   requiredJoints: ['shoulder', 'hip', 'ankle'],
   // Body line (shoulder-hip-ankle): 180° = perfectly straight.
   measure: (lms, j, aspect) => angleAt(lms[j.shoulder], lms[j.hip], lms[j.ankle], aspect),

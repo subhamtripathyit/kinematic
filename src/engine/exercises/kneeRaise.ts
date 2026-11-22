@@ -8,7 +8,7 @@ export const kneeRaise: RepDefinition = {
   name: 'Hanging knee raise',
   category: 'core',
   cameraView: 'side',
-  setupHint: 'Hang from the bar side-on to the laptop, 2–3 m away and angled up, so your whole body is in view.',
+  setupHint: 'Hang from the bar side-on to the camera, 2–3 m away and angled up, so your whole body is in view.',
   requiredJoints: ['shoulder', 'hip', 'knee'],
   // Hip angle (torso vs thigh): ~175° hanging straight, ~90° with knees at hip height.
   measure: (lms, j, aspect) => angleAt(lms[j.shoulder], lms[j.hip], lms[j.knee], aspect),

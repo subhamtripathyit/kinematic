@@ -9,6 +9,7 @@ import { StartPicker } from '../components/StartPicker';
 import { levelInfo, type Level } from '../../engine/exercises/levels';
 import { MAX_REST_SEC, RestAdjust } from '../components/RestAdjust';
 import { VoiceToggle } from '../components/VoiceToggle';
+import { useWakeLock } from '../components/useWakeLock';
 import { RecordToggle } from '../components/RecordToggle';
 import { FormDemo } from '../demo/FormDemo';
 import setupStyles from './SetupScreen.module.css';
@@ -67,6 +68,9 @@ export function RoutineRunner({
   useEffect(() => {
     voice.setEnabled(voiceEnabled);
   }, [voice, voiceEnabled]);
+
+  // keep the phone screen on for the whole routine (rests between exercises included)
+  useWakeLock(true);
 
   // The camera stays on between exercises; turn it off when the routine screen closes.
   useEffect(() => () => releaseMedia(), []);

@@ -481,3 +481,14 @@
   background: var(--primary);
   color: var(--primary-text);
 }
+
+/* touch screens: a thumb needs ~44px */
+@media (pointer: coarse) {
+  .unitToggle button {
+    min-height: 40px;
+  }
+  .unitToggleSmall button {
+    min-height: 36px;
+    padding: 4px 14px;
+  }
+}

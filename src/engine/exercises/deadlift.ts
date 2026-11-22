@@ -8,7 +8,7 @@ export const deadlift: RepDefinition = {
   name: 'Romanian deadlift',
   category: 'back',
   cameraView: 'side',
-  setupHint: 'Stand side-on to the laptop, 2–3 m away, with your whole body in view.',
+  setupHint: 'Stand side-on to the camera, 2–3 m away, with your whole body in view.',
   requiredJoints: ['shoulder', 'hip', 'knee', 'ankle'],
   // Hip angle: ~175° standing, ~100° at the bottom of the hinge.
   measure: (lms, j, aspect) => angleAt(lms[j.shoulder], lms[j.hip], lms[j.knee], aspect),

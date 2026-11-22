@@ -50,7 +50,7 @@ export function PickerScreen({
       )}
       <h1 className={styles.title}>{t('Choose an exercise')}</h1>
       <p className={styles.subtitle}>
-        {t('Kinematic counts your reps and checks your form in real time. Your video never leaves your laptop.')}
+        {t('Kinematic counts your reps and checks your form in real time. Your video never leaves your device.')}
       </p>
 
       <div className={styles.chips} role="tablist" aria-label={t('Filter by body part')}>

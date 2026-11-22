@@ -7,7 +7,7 @@ export const dips: RepDefinition = {
   name: 'Dips',
   category: 'chest',
   cameraView: 'side',
-  setupHint: 'Set up on parallel bars side-on to the laptop, 2–3 m away, so your upper body and arms are in view.',
+  setupHint: 'Set up on parallel bars side-on to the camera, 2–3 m away, so your upper body and arms are in view.',
   requiredJoints: ['shoulder', 'elbow', 'wrist', 'hip'],
   // Elbow angle: ~165° at the top, ~90° at the bottom.
   measure: (lms, j, aspect) => angleAt(lms[j.shoulder], lms[j.elbow], lms[j.wrist], aspect),

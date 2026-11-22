@@ -5,7 +5,7 @@
   align-items: start;
 }
 
-/* Ready for mobile later: panel drops below the video on narrow screens. */
+/* Narrow screens (phones, small tablets): panel drops below the video. */
 @media (max-width: 900px) {
   .layout {
     grid-template-columns: minmax(0, 1fr);
@@ -286,5 +286,73 @@
 @media (prefers-reduced-motion: reduce) {
   .countdownNumber {
     animation: none;
+  }
+}
+
+/* ---------- Phones: count + tips on the video (hidden on wide screens, where the panel is beside it) ---------- */
+.mobileHud,
+.mobileTip {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .mobileHud {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    pointer-events: none;
+  }
+  .hudCount {
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .hudTarget {
+    font-size: 1.4rem;
+    font-weight: 600;
+    opacity: 0.7;
+  }
+  .hudSet {
+    font-size: 0.9rem;
+    opacity: 0.85;
+  }
+  .mobileTip {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    display: block;
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    background: rgba(0, 0, 0, 0.7);
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-align: center;
+    pointer-events: none;
+  }
+  .tip_good {
+    color: var(--good);
+  }
+  .tip_warn {
+    color: var(--warn);
+  }
+  .tip_info {
+    color: var(--info);
+  }
+  /* the count is on the video already: keep the panel short so the buttons are near */
+  .hideOnPhone {
+    display: none;
+  }
+  /* leave a little room under the video so the panel peeks in */
+  .stage {
+    max-height: 70vh;
   }
 }

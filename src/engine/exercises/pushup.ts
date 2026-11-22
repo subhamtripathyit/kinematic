@@ -7,7 +7,7 @@ export const pushup: RepDefinition = {
   name: 'Push-up',
   category: 'chest',
   cameraView: 'side',
-  setupHint: 'Put the laptop on the floor side-on to you, about 2 m away, so your whole body is in view.',
+  setupHint: 'Put the phone or laptop on the floor side-on to you, about 2 m away, so your whole body is in view.',
   requiredJoints: ['shoulder', 'elbow', 'wrist', 'hip', 'ankle'],
   // Elbow angle: ~170° arms straight, ~80–90° at the bottom.
   measure: (lms, j, aspect) => angleAt(lms[j.shoulder], lms[j.elbow], lms[j.wrist], aspect),

@@ -7,7 +7,7 @@ export const wallSit: HoldDefinition = {
   name: 'Wall sit',
   category: 'legs',
   cameraView: 'side',
-  setupHint: 'Sit against a wall side-on to the laptop, 2–3 m away, with your whole body in view.',
+  setupHint: 'Sit against a wall side-on to the camera, 2–3 m away, with your whole body in view.',
   requiredJoints: ['shoulder', 'hip', 'knee', 'ankle'],
   // Knee angle: 90° = thighs parallel to the floor.
   measure: (lms, j, aspect) => angleAt(lms[j.hip], lms[j.knee], lms[j.ankle], aspect),

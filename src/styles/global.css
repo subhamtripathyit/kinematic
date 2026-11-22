@@ -107,3 +107,12 @@ svg {
     width: 100%;
   }
 }
+
+/* phones with a notch / home bar: keep content clear of them (viewport-fit=cover) */
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  -webkit-tap-highlight-color: transparent;
+}

@@ -8,7 +8,7 @@ export const pullup: RepDefinition = {
   name: 'Pull-up',
   category: 'back',
   cameraView: 'front',
-  setupHint: 'Face the laptop (or face away), 2–3 m back and angled up, so your hands on the bar and your hips are in view. Go all the way down each rep.',
+  setupHint: 'Face the camera (or face away), 2–3 m back and angled up, so your hands on the bar and your hips are in view. Go all the way down each rep.',
   requiredJoints: ['shoulder', 'elbow', 'wrist'],
   // Elbow angle: ~170° hanging, ~60° at the top.
   measure: (lms, j, aspect) => angleAt(lms[j.shoulder], lms[j.elbow], lms[j.wrist], aspect),

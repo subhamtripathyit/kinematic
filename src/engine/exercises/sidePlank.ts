@@ -8,7 +8,7 @@ export const sidePlank: HoldDefinition = {
   name: 'Side plank',
   category: 'core',
   cameraView: 'front',
-  setupHint: 'Face the laptop in a side plank (on the floor, ~2 m away), so your whole body is in view.',
+  setupHint: 'Face the camera in a side plank (on the floor, ~2 m away), so your whole body is in view.',
   requiredJoints: ['shoulder', 'hip', 'ankle'],
   measure: (lms, j, aspect) => angleAt(lms[j.shoulder], lms[j.hip], lms[j.ankle], aspect),
   positionRule: 'In position when the body line is above 140° and you are not standing upright. Timer runs only while the line is above 160°.',
