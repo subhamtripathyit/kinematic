@@ -6,8 +6,10 @@ import { releaseMedia } from '../../engine/mediaSession';
 import type { CameraFacing } from '../../engine/camera';
 import { CameraPicker } from '../components/CameraPicker';
 import { StartPicker } from '../components/StartPicker';
+import { levelInfo, type Level } from '../../engine/exercises/levels';
 import { MAX_REST_SEC, RestAdjust } from '../components/RestAdjust';
 import { VoiceToggle } from '../components/VoiceToggle';
+import { RecordToggle } from '../components/RecordToggle';
 import { FormDemo } from '../demo/FormDemo';
 import setupStyles from './SetupScreen.module.css';
 import type { StartMode } from '../../state/settings';
@@ -27,6 +29,10 @@ interface Props {
   startMode: StartMode;
   countdownSec: number;
   onStartModeChange: (mode: StartMode, seconds: number) => void;
+  /** training level: how strict counting and form checks are */
+  level: Level;
+  record: boolean;
+  onRecordChange: (record: boolean) => void;
   /** called after each exercise with progress, so it's saved even if the routine is stopped early */
   onExerciseDone: (summary: SessionSummary) => void;
   onFinish: (results: SessionSummary[], completed: boolean) => void;
@@ -43,6 +49,9 @@ export function RoutineRunner({
   startMode,
   countdownSec,
   onStartModeChange,
+  level,
+  record,
+  onRecordChange,
   onExerciseDone,
   onFinish,
 }: Props) {
@@ -89,6 +98,9 @@ export function RoutineRunner({
         startMode={startMode}
         countdownSec={countdownSec}
         onStartModeChange={onStartModeChange}
+        level={level}
+        record={record}
+        onRecordChange={onRecordChange}
         onStart={() => setPhase('working')}
         onSkip={() => goNext(results)}
         onEnd={() => onFinish(results, false)}
@@ -103,6 +115,8 @@ export function RoutineRunner({
       plan={step.plan}
       camera={camera}
       keepMediaAlive
+      level={level}
+      record={record}
       startMode={startMode}
       countdownSec={countdownSec}
       voiceEnabled={voiceEnabled}
@@ -142,6 +156,9 @@ interface UpNextProps {
   startMode: StartMode;
   countdownSec: number;
   onStartModeChange: (mode: StartMode, seconds: number) => void;
+  level: Level;
+  record: boolean;
+  onRecordChange: (record: boolean) => void;
   onStart: () => void;
   onSkip: () => void;
   onEnd: () => void;
@@ -159,6 +176,9 @@ function UpNext({
   startMode,
   countdownSec,
   onStartModeChange,
+  level,
+  record,
+  onRecordChange,
   onStart,
   onSkip,
   onEnd,
@@ -216,7 +236,9 @@ function UpNext({
           {t(routine.name)} · exercise {index + 1} of {routine.steps.length}
         </p>
       </div>
-      <p className={styles.label}>{isFirst ? t('First up') : t('Up next')}</p>
+      <p className={styles.label}>
+        {isFirst ? t('First up') : t('Up next')} · {t('Level {n}', { n: level })}: {t(levelInfo(level).name)}
+      </p>
       <h1 className={styles.title}>{t(def.name)}</h1>
       <p className={styles.plan}>
         {describePlan(kind, step.plan)}
@@ -248,6 +270,7 @@ function UpNext({
       {isFirst && <CameraPicker value={camera} onChange={onCameraChange} />}
       {isFirst && <StartPicker mode={startMode} seconds={countdownSec} onChange={onStartModeChange} />}
       <VoiceToggle enabled={voiceEnabled} supported={voiceSupported} onToggle={onToggleVoice} />
+      {isFirst && <RecordToggle enabled={record} onChange={onRecordChange} />}
 
       <div className={styles.actions}>
         <button className="btn-primary" onClick={onStart}>

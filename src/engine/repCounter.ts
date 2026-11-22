@@ -12,6 +12,11 @@ export interface RepCounterConfig {
   startThreshold: number;
   /** Full range of motion reached once the value moves past this. */
   activeThreshold: number;
+  /**
+   * The deepest the body (and camera) can realistically go, e.g. 75° knee angle in a squat.
+   * Higher training levels ask for more range than activeThreshold, but never past this.
+   */
+  limit?: number;
 }
 
 /**

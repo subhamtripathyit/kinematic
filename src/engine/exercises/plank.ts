@@ -20,12 +20,25 @@ export const plank: HoldDefinition = {
     {
       id: 'plank-sag',
       message: 'Lift your hips',
+      minLevel: 1, // safety: on at every level
       isWrong: ({ lms, joints, aspect, value }) => value < 165 && hipOffsetFromLine(lms, joints, aspect) > 0,
     },
     {
       id: 'plank-pike',
       message: 'Lower your hips',
       isWrong: ({ lms, joints, aspect, value }) => value < 165 && hipOffsetFromLine(lms, joints, aspect) <= 0,
+    },
+    {
+      id: 'plank-sag-strict',
+      message: 'Lift your hips',
+      minLevel: 4,
+      isWrong: ({ lms, joints, aspect, value }) => value < 170 && hipOffsetFromLine(lms, joints, aspect) > 0,
+    },
+    {
+      id: 'plank-pike-strict',
+      message: 'Lower your hips',
+      minLevel: 4,
+      isWrong: ({ lms, joints, aspect, value }) => value < 170 && hipOffsetFromLine(lms, joints, aspect) <= 0,
     },
   ],
 };

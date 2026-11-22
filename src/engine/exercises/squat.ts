@@ -1,3 +1,4 @@
+import { heelLifted } from './helpers';
 import { angleAt, leanFromVerticalDeg } from '../geometry';
 import type { RepDefinition } from './createAnalyzer';
 
@@ -10,15 +11,30 @@ export const squat: RepDefinition = {
   requiredJoints: ['shoulder', 'hip', 'knee', 'ankle'],
   // Knee angle: ~175° standing, ~90° at parallel.
   measure: (lms, j, aspect) => angleAt(lms[j.hip], lms[j.knee], lms[j.ankle], aspect),
-  counter: { direction: 'decrease', restThreshold: 160, startThreshold: 140, activeThreshold: 100 },
+  counter: { direction: 'decrease', restThreshold: 160, startThreshold: 140, activeThreshold: 100, limit: 75 },
   partialMessage: 'Go deeper',
   checks: [
     {
       id: 'squat-lean',
       message: 'Keep your chest up',
       phases: ['moving', 'active'],
+      minLevel: 1, // safety: on at every level
       isWrong: ({ lms, joints, aspect }) =>
         leanFromVerticalDeg(lms[joints.hip], lms[joints.shoulder], aspect) > 50,
+    },
+    {
+      id: 'squat-heels',
+      message: 'Keep your heels down',
+      phases: ['moving', 'active'],
+      minLevel: 3,
+      isWrong: ({ lms, joints, aspect }) => heelLifted(lms, joints, aspect),
+    },
+    {
+      id: 'squat-lean-strict',
+      message: 'Keep your chest up',
+      phases: ['moving', 'active'],
+      minLevel: 4,
+      isWrong: ({ lms, joints, aspect }) => leanFromVerticalDeg(lms[joints.hip], lms[joints.shoulder], aspect) > 40,
     },
   ],
 };

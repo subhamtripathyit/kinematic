@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { LANGS, setLang, t } from './i18n';
 import { exerciseKind, getExercise } from './engine/exercises';
 import { PickerScreen } from './ui/screens/PickerScreen';
@@ -18,6 +18,8 @@ import { currentStreak } from './state/progress';
 import { loadSettings, saveSettings, type Settings } from './state/settings';
 import { BUILT_IN_ROUTINES, loadCustomRoutines, newRoutineId, saveCustomRoutines, type Routine } from './state/routines';
 import { defaultPlan, type SetResult, type WorkoutPlan } from './state/workoutSession';
+import { RecordingDownload } from './ui/components/RecordingDownload';
+import { sessionRecorder } from './engine/recorder';
 import styles from './App.module.css';
 
 type Screen =
@@ -63,6 +65,12 @@ const EMPTY_ROUTINE: Routine = { id: '', name: '', steps: [], restBetweenSec: 90
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'picker' });
+  // "Record this session": asked before each workout, off by default
+  const [record, setRecord] = useState(false);
+  // a recording only lives through the workout and its summary; anywhere else it's dropped
+  useEffect(() => {
+    if (!['workout', 'summary', 'routine-run', 'routine-summary'].includes(screen.name)) sessionRecorder.discard();
+  }, [screen.name]);
   const [settings, setSettings] = useState<Settings>(() => loadSettings());
   const [customRoutines, setCustomRoutines] = useState<Routine[]>(() => loadCustomRoutines());
   // every t('...') call below reads the language set here
@@ -200,6 +208,8 @@ export default function App() {
             startMode={settings.startMode}
             countdownSec={settings.countdownSec}
             onStartModeChange={(startMode, countdownSec) => updateSettings({ startMode, countdownSec })}
+            record={record}
+            onRecordChange={setRecord}
             onBack={() => setScreen({ name: 'picker' })}
             onStart={(plan) => startWorkout(screen.exerciseId, plan)}
           />
@@ -214,6 +224,7 @@ export default function App() {
             startMode={settings.startMode}
             countdownSec={settings.countdownSec}
             previousBest={screen.previousBest}
+            record={record}
             voiceEnabled={settings.voiceEnabled}
             voiceSupported={voiceSupported}
             onToggleVoice={toggleVoice}
@@ -223,6 +234,8 @@ export default function App() {
             }
           />
         )}
+
+        {(screen.name === 'summary' || screen.name === 'routine-summary') && record && <RecordingDownload />}
 
         {screen.name === 'summary' && (
           <SummaryScreen
@@ -246,6 +259,8 @@ export default function App() {
             onEdit={(routine) => setScreen({ name: 'routine-edit', routine })}
             onCopy={copyRoutine}
             onDelete={(id) => storeRoutines(customRoutines.filter((r) => r.id !== id))}
+            level={settings.routineLevel}
+            onLevelChange={(routineLevel) => updateSettings({ routineLevel })}
           />
         )}
 
@@ -270,6 +285,9 @@ export default function App() {
             startMode={settings.startMode}
             countdownSec={settings.countdownSec}
             onStartModeChange={(startMode, countdownSec) => updateSettings({ startMode, countdownSec })}
+            level={settings.routineLevel ?? 3}
+            record={record}
+            onRecordChange={setRecord}
             onExerciseDone={(summary) => saveSession(summary)}
             onFinish={(results, completed) => {
               const after = loadHistory();

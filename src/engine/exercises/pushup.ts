@@ -10,15 +10,24 @@ export const pushup: RepDefinition = {
   requiredJoints: ['shoulder', 'elbow', 'wrist', 'hip', 'ankle'],
   // Elbow angle: ~170° arms straight, ~80–90° at the bottom.
   measure: (lms, j, aspect) => angleAt(lms[j.shoulder], lms[j.elbow], lms[j.wrist], aspect),
-  counter: { direction: 'decrease', restThreshold: 155, startThreshold: 135, activeThreshold: 100 },
+  counter: { direction: 'decrease', restThreshold: 155, startThreshold: 135, activeThreshold: 100, limit: 75 },
   partialMessage: 'Go lower',
   checks: [
     {
       id: 'pushup-body-line',
       message: 'Keep your body in a straight line',
       phases: ['moving', 'active'],
+      minLevel: 1, // safety: on at every level
       isWrong: ({ lms, joints, aspect }) =>
         angleAt(lms[joints.shoulder], lms[joints.hip], lms[joints.ankle], aspect) < 155,
+    },
+    {
+      id: 'pushup-body-line-strict',
+      message: 'Keep your body in a straight line',
+      phases: ['rest', 'moving', 'active'],
+      minLevel: 4,
+      isWrong: ({ lms, joints, aspect }) =>
+        angleAt(lms[joints.shoulder], lms[joints.hip], lms[joints.ankle], aspect) < 165,
     },
   ],
 };

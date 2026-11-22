@@ -1,3 +1,4 @@
+import { sideDifference } from './helpers';
 import { angleAt } from '../geometry';
 import { LM } from '../landmarks';
 import type { RepDefinition } from './createAnalyzer';
@@ -11,7 +12,7 @@ export const pullup: RepDefinition = {
   requiredJoints: ['shoulder', 'elbow', 'wrist'],
   // Elbow angle: ~170° hanging, ~60° at the top.
   measure: (lms, j, aspect) => angleAt(lms[j.shoulder], lms[j.elbow], lms[j.wrist], aspect),
-  counter: { direction: 'decrease', restThreshold: 150, startThreshold: 130, activeThreshold: 80 },
+  counter: { direction: 'decrease', restThreshold: 150, startThreshold: 130, activeThreshold: 80, limit: 55 },
   partialMessage: 'Pull higher',
   checks: [
     {
@@ -20,6 +21,14 @@ export const pullup: RepDefinition = {
       phases: ['active'],
       // y grows downward: nose below the wrists means chin is under the bar.
       isWrong: ({ lms, joints }) => lms[LM.NOSE].y > lms[joints.wrist].y,
+    },
+    {
+      id: 'pullup-even',
+      message: 'Pull evenly with both arms',
+      phases: ['moving', 'active'],
+      minLevel: 4,
+      isWrong: ({ lms, aspect }) =>
+        sideDifference(lms, ['shoulder', 'elbow', 'wrist'], (s) => angleAt(lms[s.shoulder], lms[s.elbow], lms[s.wrist], aspect)) > 30,
     },
   ],
 };

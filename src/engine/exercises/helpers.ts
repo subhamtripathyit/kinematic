@@ -53,3 +53,22 @@ export function hipOffsetFromLine(lms: Landmark[], j: Joints, aspect: number): n
   const lineY = s.y + t * (a.y - s.y);
   return (h.y - lineY) / length;
 }
+
+/** How far apart the two sides are (e.g. left vs right elbow angle). 0 if either side isn't visible. */
+export function sideDifference(lms: Landmark[], needed: (keyof Joints)[], fn: (j: Joints) => number): number {
+  const [l, r] = BOTH_SIDES;
+  if (!isVisible(lms, needed.map((k) => l[k])) || !isVisible(lms, needed.map((k) => r[k]))) return 0;
+  return Math.abs(fn(l) - fn(r));
+}
+
+/** Heel and toe points (MediaPipe 29–32) for the side these joints belong to. */
+const FOOT = { left: { heel: 29, toe: 31 }, right: { heel: 30, toe: 32 } } as const;
+
+/** True if the heel is clearly off the floor (higher than the toes), for side-view exercises. */
+export function heelLifted(lms: Landmark[], j: Joints, aspect: number): boolean {
+  const foot = j.hip === 23 ? FOOT.left : FOOT.right;
+  if (!isVisible(lms, [foot.heel, foot.toe, j.knee, j.ankle])) return false;
+  const shin = Math.hypot((lms[j.knee].x - lms[j.ankle].x) * aspect, lms[j.knee].y - lms[j.ankle].y);
+  if (shin === 0) return false;
+  return (lms[foot.toe].y - lms[foot.heel].y) / shin > 0.15;
+}

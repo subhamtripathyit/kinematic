@@ -1,5 +1,6 @@
 import type { CameraFacing } from '../engine/camera';
 import type { Lang } from '../i18n';
+import { isLevel, type Level } from '../engine/exercises/levels';
 import type { WorkoutPlan } from './workoutSession';
 
 export type StartMode = 'countdown' | 'position';
@@ -18,6 +19,8 @@ export interface Settings {
   countdownSec: number;
   /** app + voice language */
   language: Lang;
+  /** training level for routines (1–6); undefined until the user picks one */
+  routineLevel?: Level;
   /** last plan used per exercise, so setup remembers "3 x 10, 60s rest" */
   plans: Record<string, WorkoutPlan>;
 }
@@ -48,6 +51,7 @@ export function loadSettings(): Settings {
       startMode: data.startMode === 'position' ? 'position' : 'countdown',
       language: data.language === 'hi' ? 'hi' : 'en',
       countdownSec: COUNTDOWN_OPTIONS.includes(data.countdownSec as number) ? (data.countdownSec as number) : DEFAULTS.countdownSec,
+      routineLevel: isLevel(data.routineLevel) ? data.routineLevel : undefined,
       plans: data.plans && typeof data.plans === 'object' ? data.plans : {},
     };
   } catch {

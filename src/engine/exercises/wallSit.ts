@@ -18,5 +18,7 @@ export const wallSit: HoldDefinition = {
   checks: [
     { id: 'wall-sit-high', message: 'Slide lower: thighs parallel to the floor', isWrong: ({ value }) => value > 105 },
     { id: 'wall-sit-low', message: 'Come up a bit: knees at 90°', isWrong: ({ value }) => value < 75 },
+    { id: 'wall-sit-high-strict', message: 'Slide lower: thighs parallel to the floor', minLevel: 4, isWrong: ({ value }) => value > 100 },
+    { id: 'wall-sit-low-strict', message: 'Come up a bit: knees at 90°', minLevel: 4, isWrong: ({ value }) => value < 80 },
   ],
 };

@@ -11,7 +11,7 @@ export const kneeRaise: RepDefinition = {
   requiredJoints: ['shoulder', 'hip', 'knee'],
   // Hip angle (torso vs thigh): ~175° hanging straight, ~90° with knees at hip height.
   measure: (lms, j, aspect) => angleAt(lms[j.shoulder], lms[j.hip], lms[j.knee], aspect),
-  counter: { direction: 'decrease', restThreshold: 155, startThreshold: 135, activeThreshold: 100 },
+  counter: { direction: 'decrease', restThreshold: 155, startThreshold: 135, activeThreshold: 100, limit: 75 },
   partialMessage: 'Bring your knees higher',
   checks: [
     {
@@ -20,6 +20,13 @@ export const kneeRaise: RepDefinition = {
       phases: ['moving'],
       isWrong: ({ lms, joints, aspect }) =>
         leanFromVerticalDeg(lms[joints.hip], lms[joints.shoulder], aspect) > 35,
+    },
+    {
+      id: 'knee-raise-swing-strict',
+      message: 'Control the swing',
+      phases: ['moving', 'active'],
+      minLevel: 4,
+      isWrong: ({ lms, joints, aspect }) => leanFromVerticalDeg(lms[joints.hip], lms[joints.shoulder], aspect) > 25,
     },
   ],
 };

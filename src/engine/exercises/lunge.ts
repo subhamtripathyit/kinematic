@@ -23,7 +23,7 @@ export const lunge: RepDefinition = {
       j,
       FAR_LEG_VISIBILITY,
     ),
-  counter: { direction: 'decrease', restThreshold: 160, startThreshold: 140, activeThreshold: 100 },
+  counter: { direction: 'decrease', restThreshold: 160, startThreshold: 140, activeThreshold: 100, limit: 80 },
   partialMessage: 'Go deeper',
   // count each side separately ("Left 5 · Right 5")
   sides: { vote: (lms, aspect) => frontLeg(lms, aspect) },
@@ -33,6 +33,13 @@ export const lunge: RepDefinition = {
       message: 'Keep your torso upright',
       phases: ['moving', 'active'],
       isWrong: ({ lms, joints, aspect }) => leanFromVerticalDeg(lms[joints.hip], lms[joints.shoulder], aspect) > 30,
+    },
+    {
+      id: 'lunge-upright-strict',
+      message: 'Keep your torso upright',
+      phases: ['moving', 'active'],
+      minLevel: 4,
+      isWrong: ({ lms, joints, aspect }) => leanFromVerticalDeg(lms[joints.hip], lms[joints.shoulder], aspect) > 20,
     },
   ],
 };

@@ -1,4 +1,4 @@
-import { angleAt } from '../geometry';
+import { angleAt, leanFromVerticalDeg } from '../geometry';
 import type { RepDefinition } from './createAnalyzer';
 
 export const dips: RepDefinition = {
@@ -10,7 +10,15 @@ export const dips: RepDefinition = {
   requiredJoints: ['shoulder', 'elbow', 'wrist', 'hip'],
   // Elbow angle: ~165° at the top, ~90° at the bottom.
   measure: (lms, j, aspect) => angleAt(lms[j.shoulder], lms[j.elbow], lms[j.wrist], aspect),
-  counter: { direction: 'decrease', restThreshold: 150, startThreshold: 130, activeThreshold: 95 },
+  counter: { direction: 'decrease', restThreshold: 150, startThreshold: 130, activeThreshold: 95, limit: 75 },
   partialMessage: 'Go lower',
-  checks: [],
+  checks: [
+    {
+      id: 'dips-lean',
+      message: 'Keep your torso more upright',
+      phases: ['moving', 'active'],
+      minLevel: 4,
+      isWrong: ({ lms, joints, aspect }) => leanFromVerticalDeg(lms[joints.hip], lms[joints.shoulder], aspect) > 50,
+    },
+  ],
 };

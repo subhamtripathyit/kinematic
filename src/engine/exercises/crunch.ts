@@ -10,7 +10,15 @@ export const crunch: RepDefinition = {
   requiredJoints: ['shoulder', 'hip', 'knee'],
   // How far the torso lifts off the floor: ~0–10° lying flat, 30°+ at the top of a crunch.
   measure: (lms, j, aspect) => elevationDeg(lms[j.hip], lms[j.shoulder], aspect),
-  counter: { direction: 'increase', restThreshold: 12, startThreshold: 18, activeThreshold: 30 },
+  counter: { direction: 'increase', restThreshold: 12, startThreshold: 18, activeThreshold: 30, limit: 40 },
   partialMessage: 'Crunch a bit higher',
-  checks: [],
+  checks: [
+    {
+      id: 'crunch-too-high',
+      message: "Don't sit all the way up",
+      phases: ['active'],
+      minLevel: 3,
+      isWrong: ({ value }) => value > 60,
+    },
+  ],
 };

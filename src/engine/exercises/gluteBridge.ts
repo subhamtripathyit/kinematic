@@ -1,4 +1,4 @@
-import { angleAt } from '../geometry';
+import { angleAt, isVisible } from '../geometry';
 import type { RepDefinition } from './createAnalyzer';
 
 export const gluteBridge: RepDefinition = {
@@ -10,7 +10,16 @@ export const gluteBridge: RepDefinition = {
   requiredJoints: ['shoulder', 'hip', 'knee'],
   // Hip angle: ~130–140° lying with knees bent, ~170° with hips fully up.
   measure: (lms, j, aspect) => angleAt(lms[j.shoulder], lms[j.hip], lms[j.knee], aspect),
-  counter: { direction: 'increase', restThreshold: 148, startThreshold: 156, activeThreshold: 168 },
+  counter: { direction: 'increase', restThreshold: 148, startThreshold: 156, activeThreshold: 168, limit: 175 },
   partialMessage: 'Lift your hips higher',
-  checks: [],
+  checks: [
+    {
+      id: 'bridge-feet',
+      message: 'Bring your feet closer to your hips',
+      phases: ['active'],
+      minLevel: 3,
+      isWrong: ({ lms, joints, aspect }) =>
+        isVisible(lms, [joints.ankle]) && angleAt(lms[joints.hip], lms[joints.knee], lms[joints.ankle], aspect) > 120,
+    },
+  ],
 };

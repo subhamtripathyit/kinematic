@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { t } from '../../i18n';
 import { exerciseKind, EXERCISES } from '../../engine/exercises';
 import { describePlan } from '../../state/session';
-import type { Routine } from '../../state/routines';
+import { scaleRoutine, suitsLevel, type Routine } from '../../state/routines';
+import { getExercise, isHold } from '../../engine/exercises';
+import type { Level } from '../../engine/exercises/levels';
+import { LevelPicker } from '../components/LevelPicker';
 import styles from './RoutinesScreen.module.css';
 
 interface Props {
@@ -13,10 +16,20 @@ interface Props {
   onEdit: (routine: Routine) => void;
   onCopy: (routine: Routine) => void;
   onDelete: (id: string) => void;
+  /** training level; undefined until picked (routines then run as level 3) */
+  level?: Level;
+  onLevelChange: (level: Level) => void;
 }
 
 /** List of routines: built-in ones and the user's own. */
-export function RoutinesScreen({ builtIn, custom, onStart, onNew, onEdit, onCopy, onDelete }: Props) {
+export function RoutinesScreen({ builtIn, custom, onStart, onNew, onEdit, onCopy, onDelete, level, onLevelChange }: Props) {
+  // built-in routines, sized for the user's level; the ones that suit the level come first
+  const effective: Level = level ?? 3;
+  const holdId = (id: string) => isHold(getExercise(id));
+  const scaled = builtIn.map((r) => scaleRoutine(r, effective, holdId));
+  const recommended = scaled.filter((r) => suitsLevel(r, effective));
+  const others = scaled.filter((r) => !suitsLevel(r, effective));
+
   return (
     <section className={styles.screen}>
       <div className={styles.top}>
@@ -29,6 +42,16 @@ export function RoutinesScreen({ builtIn, custom, onStart, onNew, onEdit, onCopy
         <button className="btn-primary" onClick={onNew}>
           {t('New routine')}
         </button>
+      </div>
+
+      <LevelPicker level={level} onChange={onLevelChange} />
+
+      <h2 className={styles.groupTitle}>{t('Recommended for level {n}', { n: effective })}</h2>
+      <p className={styles.muted}>{t('Sets, reps and rest are adjusted to your level.')}</p>
+      <div className={styles.grid}>
+        {recommended.map((r) => (
+          <RoutineCard key={r.id} routine={r} onStart={onStart} onCopy={onCopy} />
+        ))}
       </div>
 
       <h2 className={styles.groupTitle}>{t('My routines')}</h2>
@@ -44,12 +67,16 @@ export function RoutinesScreen({ builtIn, custom, onStart, onNew, onEdit, onCopy
         </div>
       )}
 
-      <h2 className={styles.groupTitle}>{t('Built-in')}</h2>
-      <div className={styles.grid}>
-        {builtIn.map((r) => (
-          <RoutineCard key={r.id} routine={r} onStart={onStart} onCopy={onCopy} />
-        ))}
-      </div>
+      {others.length > 0 && (
+        <>
+          <h2 className={styles.groupTitle}>{t('More routines')}</h2>
+          <div className={styles.grid}>
+            {others.map((r) => (
+              <RoutineCard key={r.id} routine={r} onStart={onStart} onCopy={onCopy} />
+            ))}
+          </div>
+        </>
+      )}
     </section>
   );
 }

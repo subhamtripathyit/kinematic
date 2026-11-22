@@ -19,12 +19,19 @@ export const sidePlank: HoldDefinition = {
     {
       id: 'side-plank-sag',
       message: 'Lift your hips',
+      minLevel: 1, // safety: on at every level
       isWrong: ({ lms, joints, aspect, value }) => value < 160 && hipOffsetFromLine(lms, joints, aspect) > 0,
     },
     {
       id: 'side-plank-line',
       message: 'Straighten your body',
       isWrong: ({ lms, joints, aspect, value }) => value < 160 && hipOffsetFromLine(lms, joints, aspect) <= 0,
+    },
+    {
+      id: 'side-plank-sag-strict',
+      message: 'Lift your hips',
+      minLevel: 4,
+      isWrong: ({ lms, joints, aspect, value }) => value < 167 && hipOffsetFromLine(lms, joints, aspect) > 0,
     },
   ],
 };

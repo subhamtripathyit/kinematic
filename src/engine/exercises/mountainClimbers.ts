@@ -13,7 +13,7 @@ export const mountainClimbers: RepDefinition = {
   // Hip angle of the driving leg: ~165° leg back, ~90° knee at chest.
   measure: (lms, j, aspect) =>
     minOverSides(lms, ['shoulder', 'hip', 'knee'], (s) => angleAt(lms[s.shoulder], lms[s.hip], lms[s.knee], aspect), j),
-  counter: { direction: 'decrease', restThreshold: 145, startThreshold: 130, activeThreshold: 100 },
+  counter: { direction: 'decrease', restThreshold: 145, startThreshold: 130, activeThreshold: 100, limit: 80 },
   partialMessage: 'Drive your knee further in',
   // Done fast on purpose: no 'Slow down'.
   minRepMs: 0,
@@ -30,6 +30,14 @@ export const mountainClimbers: RepDefinition = {
       // Back leg (the straighter one) should form a line from shoulder to ankle.
       isWrong: ({ lms, joints, aspect }) =>
         maxOverSides(lms, ['shoulder', 'hip', 'ankle'], (s) => angleAt(lms[s.shoulder], lms[s.hip], lms[s.ankle], aspect), joints) < 150,
+    },
+    {
+      id: 'climbers-hips-strict',
+      message: 'Keep your hips down',
+      phases: ['rest', 'moving', 'active'],
+      minLevel: 4,
+      isWrong: ({ lms, joints, aspect }) =>
+        maxOverSides(lms, ['shoulder', 'hip', 'ankle'], (s) => angleAt(lms[s.shoulder], lms[s.hip], lms[s.ankle], aspect), joints) < 160,
     },
   ],
 };

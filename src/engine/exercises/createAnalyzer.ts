@@ -13,6 +13,7 @@ import { Smoother, isVisible, pickSide } from '../geometry';
 import { sideJoints, type Joints, type Side } from '../landmarks';
 import { RepCounter, type RepCounterConfig, type RepPhase } from '../repCounter';
 import type { Category } from './categories';
+import { levelRules, type Level } from './levels';
 
 // ---------- Definitions: what makes each exercise different ----------
 
@@ -31,6 +32,11 @@ export interface FormCheck {
   /** Only checked during these phases of the rep. */
   phases: RepPhase[];
   isWrong: (ctx: FrameContext) => boolean;
+  /**
+   * Lowest training level this check is on for: 1 = safety (always on),
+   * 2 = normal form (default), 3+ = stricter checks that only routines at that level use.
+   */
+  minLevel?: number;
 }
 
 export interface HoldContext {
@@ -45,6 +51,8 @@ export interface HoldCheck {
   id: string;
   message: string;
   isWrong: (ctx: HoldContext) => boolean;
+  /** Same as FormCheck.minLevel. */
+  minLevel?: number;
 }
 
 interface BaseDefinition {
@@ -124,6 +132,7 @@ export function exerciseKind(def: ExerciseDefinition): ExerciseKind {
 
 const GOOD_REP: Feedback = { id: 'good-rep', message: 'Good rep!', level: 'good' };
 const TOO_FAST: Feedback = { id: 'too-fast', message: 'Slow down', level: 'warn' };
+const LOCKOUT: Feedback = { id: 'lockout', message: 'Go all the way back to the start', level: 'info' };
 const HOLDING: Feedback = { id: 'holding', message: 'Hold it, looking good', level: 'good' };
 
 export function emptyStats(): ExerciseStats {
@@ -157,15 +166,41 @@ export function scoreRep(full: boolean, formMistakes: number, tooFast: boolean, 
   return Math.max(0, 100 - 25 * formMistakes - (tooFast ? 20 : 0));
 }
 
+export interface AnalyzerOptions {
+  /** Training level (routines). Leave out for the normal behaviour. */
+  level?: Level;
+}
+
 /** Turns an exercise definition into a working analyzer. */
-export function createAnalyzerFromDefinition(def: ExerciseDefinition): ExerciseAnalyzer {
-  return isHold(def) ? createHoldAnalyzer(def) : createRepAnalyzer(def);
+export function createAnalyzerFromDefinition(def: ExerciseDefinition, options: AnalyzerOptions = {}): ExerciseAnalyzer {
+  return isHold(def) ? createHoldAnalyzer(def, options) : createRepAnalyzer(def, options);
+}
+
+const checkOn = (minLevel: number | undefined, maxCheckLevel: number) => (minLevel ?? 2) <= maxCheckLevel;
+
+/** The rep thresholds for a level: half range at level 1, a full lockout at level 5+. */
+export function levelCounter(cfg: RepCounterConfig, level?: Level): RepCounterConfig {
+  const rules = levelRules(level);
+  const { restThreshold: rest, startThreshold: start, activeThreshold: active } = cfg;
+  let target = start + (active - start) * rules.rangeScale;
+  // never ask for more than the body can do
+  if (cfg.limit !== undefined && rules.rangeScale > 1) {
+    target = cfg.direction === 'decrease' ? Math.max(target, cfg.limit) : Math.min(target, cfg.limit);
+  }
+  return {
+    ...cfg,
+    activeThreshold: target,
+    restThreshold: rules.lockout ? rest + (rest - start) * 0.25 : rest,
+  };
 }
 
 // ---------- Rep exercises ----------
 
-function createRepAnalyzer(def: RepDefinition): ExerciseAnalyzer {
-  const counter = new RepCounter(def.counter);
+function createRepAnalyzer(def: RepDefinition, options: AnalyzerOptions): ExerciseAnalyzer {
+  const rules = levelRules(options.level);
+  const counterCfg = levelCounter(def.counter, options.level);
+  const checks = def.checks.filter((c) => checkOn(c.minLevel, rules.maxCheckLevel));
+  const counter = new RepCounter(counterCfg);
   const smoother = new Smoother(0.5);
   const gate = new FeedbackGate();
   const repErrors = new Set<string>();
@@ -176,18 +211,18 @@ function createRepAnalyzer(def: RepDefinition): ExerciseAnalyzer {
   let repStartTs: number | null = null;
   let lastRepScore: number | null = null;
   let lastRepMs: number | null = null;
-  const minRepMs = def.minRepMs ?? 1000;
+  const minRepMs = (def.minRepMs ?? 1000) * rules.tempoScale;
   // furthest each side has moved during the rep in progress (alternating exercises)
   const sidePeak: Record<Side, number | null> = { left: null, right: null };
   // frame votes for the working side during the rep in progress (lunges)
   const sideVotes: Record<Side, number> = { left: 0, right: 0 };
   /** How much of the range (start -> full) a peak reached, 0..1. */
   const rangeFraction = (peak: number) => {
-    const { startThreshold: start, activeThreshold: active } = def.counter;
+    const { startThreshold: start, activeThreshold: active } = counterCfg;
     return (start - peak) / (start - active);
   };
   const moreActive = (a: number, b: number) =>
-    def.counter.direction === 'decrease' ? Math.min(a, b) : Math.max(a, b);
+    counterCfg.direction === 'decrease' ? Math.min(a, b) : Math.max(a, b);
 
   /** Which side the finished rep belongs to, or null when we're not sure. */
   const creditedSide = (): Side | null => {
@@ -306,12 +341,18 @@ function createRepAnalyzer(def: RepDefinition): ExerciseAnalyzer {
       }
 
       const ctx: FrameContext = { lms, joints, aspect: frame.aspect, value, phase: counter.phase };
-      const failed = def.checks.find((c) => c.phases.includes(counter.phase) && c.isWrong(ctx));
+      const failed = checks.find((c) => c.phases.includes(counter.phase) && c.isWrong(ctx));
       // Between reps, remind side-view exercises to stand side-on.
       const framing =
         !failed && counter.phase === 'rest' && def.cameraView === 'side' ? facingCameraFeedback(lms, frame.aspect) : null;
+      // Levels 5–6: the rep only counts after a full return to the start, so say so when they stop short.
+      const { restThreshold: looseRest, direction } = def.counter;
+      const shortOfLockout =
+        rules.lockout &&
+        counter.phase !== 'rest' &&
+        (direction === 'decrease' ? value >= looseRest : value <= looseRest);
       const shown = gate.update(
-        failed ? { id: failed.id, message: failed.message, level: 'warn' } : framing,
+        failed ? { id: failed.id, message: failed.message, level: 'warn' } : shortOfLockout ? LOCKOUT : framing,
         now,
       );
       // A mistake only counts against the rep once it was actually shown (lasted several frames).
@@ -341,7 +382,8 @@ function createRepAnalyzer(def: RepDefinition): ExerciseAnalyzer {
 
 // ---------- Timed (hold) exercises ----------
 
-function createHoldAnalyzer(def: HoldDefinition): ExerciseAnalyzer {
+function createHoldAnalyzer(def: HoldDefinition, options: AnalyzerOptions): ExerciseAnalyzer {
+  const checks = def.checks.filter((c) => checkOn(c.minLevel, levelRules(options.level).maxCheckLevel));
   const smoother = new Smoother(0.5);
   const gate = new FeedbackGate();
   const notInPosition: Feedback = { id: 'not-in-position', message: def.positionMessage, level: 'info' };
@@ -415,7 +457,7 @@ function createHoldAnalyzer(def: HoldDefinition): ExerciseAnalyzer {
       if (wasInPosition) stats.positionMs += dt;
       wasInPosition = true;
 
-      const failed = def.checks.find((c) => c.isWrong(ctx));
+      const failed = checks.find((c) => c.isWrong(ctx));
       const holding = !failed;
       // Timer only runs while the position AND form are good.
       if (holding && wasHolding) stats.holdMs += dt;

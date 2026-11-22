@@ -16,6 +16,8 @@ import { FeedbackText } from '../components/FeedbackText';
 import { DebugPanel, type DebugSnapshot } from '../components/DebugPanel';
 import styles from './WorkoutScreen.module.css';
 import { MAX_REST_SEC, RestAdjust } from '../components/RestAdjust';
+import type { Level } from '../../engine/exercises/levels';
+import { sessionRecorder, type Hud } from '../../engine/recorder';
 
 interface Props {
   exerciseId: string;
@@ -40,6 +42,10 @@ interface Props {
   /** how each set starts */
   startMode?: StartMode;
   countdownSec?: number;
+  /** routines: training level (how strict counting and form checks are). Left out on the Exercises tab. */
+  level?: Level;
+  /** "Record session": draw this workout into the shared recording */
+  record?: boolean;
 }
 
 /** Before counting starts: a countdown, or waiting for the user to get into position. */
@@ -87,6 +93,8 @@ export function WorkoutScreen({
   keepMediaAlive = false,
   startMode = 'countdown',
   countdownSec = 3,
+  level,
+  record = false,
 }: Props) {
   const exercise = getExercise(exerciseId);
   const hold = isHold(exercise);
@@ -155,7 +163,7 @@ export function WorkoutScreen({
     let lastVideoTime = -1;
     let finished = false;
 
-    const analyzer = createAnalyzer(exerciseId);
+    const analyzer = createAnalyzer(exerciseId, { level });
     const session = new WorkoutSession(plan, hold ? 'hold' : 'reps');
 
     // Last values sent to React, so we only re-render when something changes.
@@ -167,6 +175,29 @@ export function WorkoutScreen({
     let shownSides = { left: -1, right: -1 };
     let pbAnnounced = false;
     let pbTimer = 0;
+
+    // What the recording shows on top of the video (updated as the workout goes).
+    let hudCount = 0;
+    let hudTip: Feedback | null = null;
+    let hudValue: number | null = null;
+    const hudNow = (now: number): Hud => {
+      let main: string;
+      if (session.phase === 'resting') main = `${t('Rest')} ${formatDuration(session.restRemainingSec(now))}`;
+      else if (gate === 'countdown') main = String(Math.max(1, Math.ceil((gateEndsAt - now) / 1000)));
+      else if (gate === 'position') main = t('Get in position');
+      else main = hold ? formatDuration(hudCount) : t('{n} reps', { n: hudCount });
+      let sub = `${t('Set')} ${session.currentSet}${plan.mode === 'plan' ? ` / ${plan.sets}` : ''}`;
+      if (hasSides && shownSides.left >= 0) sub += ` · ${t('Left')} ${shownSides.left} · ${t('Right')} ${shownSides.right}`;
+      const title = `${t(exercise.name)}${level ? ` · ${t('Level {n}', { n: level })}` : ''}`;
+      const live = gate === 'go' && session.phase === 'working';
+      return {
+        title,
+        main,
+        sub,
+        angle: live ? hudValue : null,
+        tip: live && hudTip ? { message: t(hudTip.message), level: hudTip.level } : null,
+      };
+    };
 
     // Start gate: nothing is counted until it says "Go!".
     let gate: 'countdown' | 'position' | 'go' = 'go';
@@ -339,6 +370,8 @@ export function WorkoutScreen({
         fpsWindowStart = now;
       }
 
+      if (record) sessionRecorder.drawFrame(video, frame, hudNow(now), camera === 'user');
+
       const ctx = canvas.getContext('2d');
 
       // While resting: just draw the skeleton, don't count anything.
@@ -375,6 +408,9 @@ export function WorkoutScreen({
 
       const result = analyzer.update(frame);
       statsRef.current = result.stats;
+      hudCount = hold ? Math.floor(result.stats.holdMs / 1000) : result.stats.reps;
+      hudTip = result.feedback;
+      hudValue = result.value;
       if (ctx) drawSkeleton(ctx, frame, result.inFrame);
 
       const left = result.stats.leftReps ?? 0;
@@ -456,6 +492,7 @@ export function WorkoutScreen({
         engine = created;
         startedAtRef.current = Date.now();
         setStatus('running');
+        if (record) sessionRecorder.begin();
         if (plan.mode === 'plan' && plan.sets > 1) voice.say(t('Set 1 of {n}.', { n: plan.sets }), { interrupt: true });
         startGate(performance.now());
         rafId = requestAnimationFrame(loop);
@@ -471,10 +508,12 @@ export function WorkoutScreen({
       cancelAnimationFrame(rafId);
       engine = null;
       if (!keepMediaAlive) releaseMedia();
+      // a routine's next exercise carries on with the same video; pause it in between
+      if (record && keepMediaAlive) sessionRecorder.pause();
       actionsRef.current = null;
       window.clearTimeout(pbTimer);
     };
-  }, [exerciseId, plan, hold, voice, camera, previousBest, keepMediaAlive, startMode, countdownSec]);
+  }, [exerciseId, plan, hold, voice, camera, previousBest, keepMediaAlive, startMode, countdownSec, level, record]);
 
   const running = status === 'running';
   const resting = running && view.phase === 'resting';

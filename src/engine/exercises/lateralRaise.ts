@@ -1,6 +1,6 @@
 import { angleAt } from '../geometry';
 import type { RepDefinition } from './createAnalyzer';
-import { maxOverSides, minOverSides } from './helpers';
+import { maxOverSides, minOverSides, sideDifference } from './helpers';
 
 export const lateralRaise: RepDefinition = {
   id: 'lateral-raise',
@@ -12,7 +12,7 @@ export const lateralRaise: RepDefinition = {
   // Arm angle from the body (hip-shoulder-wrist): ~15° arms down, ~90° at shoulder height.
   measure: (lms, j, aspect) =>
     minOverSides(lms, ['hip', 'shoulder', 'wrist'], (s) => angleAt(lms[s.hip], lms[s.shoulder], lms[s.wrist], aspect), j),
-  counter: { direction: 'increase', restThreshold: 35, startThreshold: 50, activeThreshold: 80 },
+  counter: { direction: 'increase', restThreshold: 35, startThreshold: 50, activeThreshold: 80, limit: 92 },
   partialMessage: 'Raise to shoulder height',
   checks: [
     {
@@ -21,6 +21,22 @@ export const lateralRaise: RepDefinition = {
       phases: ['active'],
       isWrong: ({ lms, joints, aspect }) =>
         maxOverSides(lms, ['hip', 'shoulder', 'wrist'], (s) => angleAt(lms[s.hip], lms[s.shoulder], lms[s.wrist], aspect), joints) > 115,
+    },
+    {
+      id: 'lateral-even',
+      message: 'Raise both arms evenly',
+      phases: ['moving', 'active'],
+      minLevel: 3,
+      isWrong: ({ lms, aspect }) =>
+        sideDifference(lms, ['hip', 'shoulder', 'wrist'], (s) => angleAt(lms[s.hip], lms[s.shoulder], lms[s.wrist], aspect)) > 25,
+    },
+    {
+      id: 'lateral-too-high-strict',
+      message: 'Stop at shoulder height',
+      phases: ['active'],
+      minLevel: 4,
+      isWrong: ({ lms, joints, aspect }) =>
+        maxOverSides(lms, ['hip', 'shoulder', 'wrist'], (s) => angleAt(lms[s.hip], lms[s.shoulder], lms[s.wrist], aspect), joints) > 100,
     },
   ],
 };

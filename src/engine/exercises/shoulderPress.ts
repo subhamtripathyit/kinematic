@@ -1,6 +1,6 @@
 import { angleAt } from '../geometry';
 import type { RepDefinition } from './createAnalyzer';
-import { minOverSides } from './helpers';
+import { minOverSides, sideDifference } from './helpers';
 
 export const shoulderPress: RepDefinition = {
   id: 'shoulder-press',
@@ -12,7 +12,16 @@ export const shoulderPress: RepDefinition = {
   // Elbow angle of the weaker arm: ~80–90° at the bottom, ~170° locked out.
   measure: (lms, j, aspect) =>
     minOverSides(lms, ['shoulder', 'elbow', 'wrist'], (s) => angleAt(lms[s.shoulder], lms[s.elbow], lms[s.wrist], aspect), j),
-  counter: { direction: 'increase', restThreshold: 100, startThreshold: 120, activeThreshold: 160 },
+  counter: { direction: 'increase', restThreshold: 100, startThreshold: 120, activeThreshold: 160, limit: 172 },
   partialMessage: 'Press all the way up',
-  checks: [],
+  checks: [
+    {
+      id: 'press-even',
+      message: 'Press both arms evenly',
+      phases: ['moving', 'active'],
+      minLevel: 3,
+      isWrong: ({ lms, aspect }) =>
+        sideDifference(lms, ['shoulder', 'elbow', 'wrist'], (s) => angleAt(lms[s.shoulder], lms[s.elbow], lms[s.wrist], aspect)) > 30,
+    },
+  ],
 };

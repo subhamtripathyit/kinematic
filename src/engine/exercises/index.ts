@@ -1,6 +1,7 @@
 import type { ExerciseAnalyzer } from '../types';
 import {
   createAnalyzerFromDefinition,
+  type AnalyzerOptions,
   exerciseKind,
   isHold,
   type ExerciseDefinition,
@@ -51,8 +52,8 @@ export function getExercise(id: string): ExerciseDefinition {
   return def;
 }
 
-export function createAnalyzer(id: string): ExerciseAnalyzer {
-  return createAnalyzerFromDefinition(getExercise(id));
+export function createAnalyzer(id: string, options?: AnalyzerOptions): ExerciseAnalyzer {
+  return createAnalyzerFromDefinition(getExercise(id), options);
 }
 
 /** Exercises grouped by category, in picker order. Empty categories are left out. */

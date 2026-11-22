@@ -8,6 +8,7 @@ import { StartPicker } from '../components/StartPicker';
 import type { StartMode } from '../../state/settings';
 import { FormDemo } from '../demo/FormDemo';
 import { VoiceToggle } from '../components/VoiceToggle';
+import { RecordToggle } from '../components/RecordToggle';
 import styles from './SetupScreen.module.css';
 
 interface Props {
@@ -21,6 +22,8 @@ interface Props {
   startMode: StartMode;
   countdownSec: number;
   onStartModeChange: (mode: StartMode, seconds: number) => void;
+  record: boolean;
+  onRecordChange: (record: boolean) => void;
   onStart: (plan: WorkoutPlan) => void;
   onBack: () => void;
 }
@@ -39,6 +42,8 @@ export function SetupScreen({
   startMode,
   countdownSec,
   onStartModeChange,
+  record,
+  onRecordChange,
   onStart,
   onBack,
 }: Props) {
@@ -170,6 +175,7 @@ export function SetupScreen({
       <StartPicker mode={startMode} seconds={countdownSec} onChange={onStartModeChange} />
 
       <VoiceToggle enabled={voiceEnabled} supported={voiceSupported} onToggle={onToggleVoice} />
+      <RecordToggle enabled={record} onChange={onRecordChange} />
 
       {error && <p className={styles.error}>{error}</p>}
 
