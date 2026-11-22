@@ -17,6 +17,11 @@ export interface RepCounterConfig {
    * Higher training levels ask for more range than activeThreshold, but never past this.
    */
   limit?: number;
+  /**
+   * Frames the value must stay past activeThreshold before the rep counts as full depth.
+   * 2+ stops a single glitchy frame from turning a half rep into a full one. Default 1.
+   */
+  confirmFrames?: number;
 }
 
 /**
@@ -27,6 +32,7 @@ export interface RepCounterConfig {
  */
 export class RepCounter {
   phase: RepPhase = 'rest';
+  private activeStreak = 0;
 
   constructor(private readonly cfg: RepCounterConfig) {}
 
@@ -39,8 +45,13 @@ export class RepCounter {
     const { restThreshold, startThreshold, activeThreshold } = this.cfg;
 
     if (this.past(value, activeThreshold)) {
-      this.phase = 'active';
-      return null;
+      this.activeStreak++;
+      if (this.activeStreak >= (this.cfg.confirmFrames ?? 1)) {
+        this.phase = 'active';
+        return null;
+      }
+    } else {
+      this.activeStreak = 0;
     }
     if (this.phase === 'rest') {
       if (this.past(value, startThreshold)) this.phase = 'moving';
@@ -56,5 +67,6 @@ export class RepCounter {
 
   reset(): void {
     this.phase = 'rest';
+    this.activeStreak = 0;
   }
 }

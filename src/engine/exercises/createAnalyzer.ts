@@ -78,6 +78,14 @@ export interface RepDefinition extends BaseDefinition {
   /** Reps faster than this get "Slow down". Default 1000 ms. 0 = no tempo check (jumping jacks). */
   minRepMs?: number;
   /**
+   * The body position the exercise is done in (lying, standing, horizontal, hanging...).
+   * Nothing counts outside it, so e.g. bending your arms while standing isn't a push-up.
+   */
+  position?: {
+    message: string;
+    isIn: (lms: Landmark[], joints: Joints, aspect: number) => boolean;
+  };
+  /**
    * Alternating exercises: how to measure ONE side, so each rep can be credited to
    * the left or right side. The side that moved further is the one that worked.
    */
@@ -129,6 +137,15 @@ export function exerciseKind(def: ExerciseDefinition): ExerciseKind {
 }
 
 // ---------- Shared bits ----------
+
+/** Frames in a row out of position before a rep in progress is dropped (~0.2 s): one bad frame isn't enough. */
+const POSITION_FRAMES = 6;
+/** A jump bigger than this (degrees) between two frames is a tracking glitch, not movement... */
+const MAX_JUMP = 45;
+/** ...unless it lasts this many frames (then it was real). */
+const JUMP_FRAMES = 2;
+/** Anything quicker than this is a glitch, not a rep (fast exercises: half of it). */
+const MIN_REP_MS = 400;
 
 const GOOD_REP: Feedback = { id: 'good-rep', message: 'Good rep!', level: 'good' };
 const TOO_FAST: Feedback = { id: 'too-fast', message: 'Slow down', level: 'warn' };
@@ -198,7 +215,15 @@ export function levelCounter(cfg: RepCounterConfig, level?: Level): RepCounterCo
 
 function createRepAnalyzer(def: RepDefinition, options: AnalyzerOptions): ExerciseAnalyzer {
   const rules = levelRules(options.level);
-  const counterCfg = levelCounter(def.counter, options.level);
+  // the full-depth point has to hold for 2 frames (a single glitchy frame doesn't count)
+  const counterCfg: RepCounterConfig = { ...levelCounter(def.counter, options.level), confirmFrames: 2 };
+  const minRepGapMs = def.minRepMs === 0 ? MIN_REP_MS / 2 : MIN_REP_MS;
+  const positionFeedback: Feedback | null = def.position
+    ? { id: 'rep-position', message: def.position.message, level: 'info' }
+    : null;
+  let outOfPosition = 0;
+  let lastRaw: number | null = null;
+  let jumpFrames = 0;
   const checks = def.checks.filter((c) => checkOn(c.minLevel, rules.maxCheckLevel));
   const counter = new RepCounter(counterCfg);
   const smoother = new Smoother(0.5);
@@ -240,6 +265,18 @@ function createRepAnalyzer(def: RepDefinition, options: AnalyzerOptions): Exerci
     return moreActive(l, r) === l ? 'left' : 'right';
   };
 
+  /** Forget the rep in progress without counting anything. */
+  const dropRep = () => {
+    counter.reset();
+    currentPeak = null;
+    repStartTs = null;
+    repErrors.clear();
+    sidePeak.left = null;
+    sidePeak.right = null;
+    sideVotes.left = 0;
+    sideVotes.right = 0;
+  };
+
   const addMistake = (message: string) => {
     stats.mistakes[message] = (stats.mistakes[message] ?? 0) + 1;
   };
@@ -276,7 +313,24 @@ function createRepAnalyzer(def: RepDefinition, options: AnalyzerOptions): Exerci
         return result(gate.update(outOfFrameFeedback(lms, required), now), false, null);
       }
 
-      const value = smoother.next(def.measure(lms, joints, frame.aspect));
+      // Ignore sudden jumps (a point flicking somewhere else for a frame or two).
+      let raw = def.measure(lms, joints, frame.aspect);
+      if (lastRaw !== null && Math.abs(raw - lastRaw) > MAX_JUMP && jumpFrames < JUMP_FRAMES) {
+        jumpFrames++;
+        raw = lastRaw;
+      } else {
+        jumpFrames = 0;
+        lastRaw = raw;
+      }
+      const value = smoother.next(raw);
+
+      // Wrong body position (e.g. standing for a push-up): drop the rep in progress and say so.
+      outOfPosition = def.position && !def.position.isIn(lms, joints, frame.aspect) ? outOfPosition + 1 : 0;
+      if (positionFeedback && outOfPosition >= POSITION_FRAMES) {
+        dropRep();
+        return result(gate.update(positionFeedback, now), true, value);
+      }
+
       const previousPhase = counter.phase;
       const event = counter.update(value);
       if (previousPhase === 'rest' && counter.phase !== 'rest') repStartTs = now;
@@ -300,7 +354,10 @@ function createRepAnalyzer(def: RepDefinition, options: AnalyzerOptions): Exerci
         }
       }
 
-      if (event) {
+      // Too quick to be a real rep: a tracking glitch. Count nothing.
+      if (event && repStartTs !== null && now - repStartTs < minRepGapMs) {
+        dropRep();
+      } else if (event) {
         const peak = currentPeak ?? value;
         lastPeak = peak;
         currentPeak = null;
@@ -376,6 +433,9 @@ function createRepAnalyzer(def: RepDefinition, options: AnalyzerOptions): Exerci
       sidePeak.right = null;
       sideVotes.left = 0;
       sideVotes.right = 0;
+      outOfPosition = 0;
+      lastRaw = null;
+      jumpFrames = 0;
     },
   };
 }

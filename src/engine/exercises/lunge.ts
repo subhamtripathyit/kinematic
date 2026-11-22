@@ -2,7 +2,7 @@ import { angleAt, isVisible, leanFromVerticalDeg } from '../geometry';
 import type { Side } from '../landmarks';
 import type { Landmark } from '../types';
 import type { RepDefinition } from './createAnalyzer';
-import { minOverSides } from './helpers';
+import { minOverSides, onFeet, torsoElevation } from './helpers';
 
 /** Alternating lunges: each lunge (either leg) counts as 1 rep. */
 export const lunge: RepDefinition = {
@@ -24,6 +24,10 @@ export const lunge: RepDefinition = {
       FAR_LEG_VISIBILITY,
     ),
   counter: { direction: 'decrease', restThreshold: 160, startThreshold: 140, activeThreshold: 100, limit: 80 },
+  position: {
+    message: 'Stand up straight to start',
+    isIn: (lms, j, aspect) => onFeet(lms, j, aspect) && torsoElevation(lms, j, aspect) > 40,
+  },
   partialMessage: 'Go deeper',
   // count each side separately ("Left 5 · Right 5")
   sides: { vote: (lms, aspect) => frontLeg(lms, aspect) },

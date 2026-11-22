@@ -1,4 +1,5 @@
 import { angleAt, isVisible } from '../geometry';
+import { kneesUp, torsoElevation } from './helpers';
 import type { RepDefinition } from './createAnalyzer';
 
 export const gluteBridge: RepDefinition = {
@@ -11,6 +12,10 @@ export const gluteBridge: RepDefinition = {
   // Hip angle: ~130–140° lying with knees bent, ~170° with hips fully up.
   measure: (lms, j, aspect) => angleAt(lms[j.shoulder], lms[j.hip], lms[j.knee], aspect),
   counter: { direction: 'increase', restThreshold: 148, startThreshold: 156, activeThreshold: 168, limit: 175 },
+  position: {
+    message: 'Lie on your back, knees bent, to start',
+    isIn: (lms, j, aspect) => kneesUp(lms, j) && torsoElevation(lms, j, aspect) < 50,
+  },
   partialMessage: 'Lift your hips higher',
   checks: [
     {

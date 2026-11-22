@@ -572,4 +572,10 @@ export const HI: Record<string, string> = {
   "Include sound (microphone)": "आवाज़ भी रिकॉर्ड करें (माइक्रोफ़ोन)",
   "Records your voice and the coach's voice from the speaker. Your browser will ask to use the microphone. With headphones, the coach's voice isn't recorded.": "आपकी आवाज़ और स्पीकर से कोच की आवाज़ रिकॉर्ड करता है। ब्राउज़र माइक्रोफ़ोन की अनुमति माँगेगा। हेडफ़ोन लगाने पर कोच की आवाज़ रिकॉर्ड नहीं होगी।",
   "The microphone wasn't allowed, so this video has no sound.": "माइक्रोफ़ोन की अनुमति नहीं मिली, इसलिए इस वीडियो में आवाज़ नहीं है।",
+  "Stand up straight to start": "शुरू करने के लिए सीधे खड़े हों",
+  "Sit or stand tall to start": "शुरू करने के लिए सीधे बैठें या खड़े हों",
+  "Get into push-up position": "पुश-अप पोज़ीशन में आएँ",
+  "Lie on your back, knees bent, to start": "शुरू करने के लिए पीठ के बल लेटें, घुटने मोड़ें",
+  "Hang from the bar to start": "शुरू करने के लिए बार से लटकें",
+  "Get onto the bars to start": "शुरू करने के लिए बार पर आएँ",
 };

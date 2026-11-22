@@ -1,4 +1,5 @@
 import { angleAt, leanFromVerticalDeg } from '../geometry';
+import { hanging, torsoElevation } from './helpers';
 import type { RepDefinition } from './createAnalyzer';
 
 /** Hanging knee raise. */
@@ -12,6 +13,10 @@ export const kneeRaise: RepDefinition = {
   // Hip angle (torso vs thigh): ~175° hanging straight, ~90° with knees at hip height.
   measure: (lms, j, aspect) => angleAt(lms[j.shoulder], lms[j.hip], lms[j.knee], aspect),
   counter: { direction: 'decrease', restThreshold: 155, startThreshold: 135, activeThreshold: 100, limit: 75 },
+  position: {
+    message: 'Hang from the bar to start',
+    isIn: (lms, j, aspect) => hanging(lms, j) && torsoElevation(lms, j, aspect) > 45,
+  },
   partialMessage: 'Bring your knees higher',
   checks: [
     {

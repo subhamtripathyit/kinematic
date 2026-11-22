@@ -1,6 +1,6 @@
 import { angleAt } from '../geometry';
 import type { RepDefinition } from './createAnalyzer';
-import { maxOverSides, minOverSides, sideDifference } from './helpers';
+import { maxOverSides, minOverSides, sideDifference, torsoElevation } from './helpers';
 
 export const lateralRaise: RepDefinition = {
   id: 'lateral-raise',
@@ -13,6 +13,10 @@ export const lateralRaise: RepDefinition = {
   measure: (lms, j, aspect) =>
     minOverSides(lms, ['hip', 'shoulder', 'wrist'], (s) => angleAt(lms[s.hip], lms[s.shoulder], lms[s.wrist], aspect), j),
   counter: { direction: 'increase', restThreshold: 35, startThreshold: 50, activeThreshold: 80, limit: 92 },
+  position: {
+    message: 'Stand up straight to start',
+    isIn: (lms, j, aspect) => torsoElevation(lms, j, aspect) > 55,
+  },
   partialMessage: 'Raise to shoulder height',
   checks: [
     {

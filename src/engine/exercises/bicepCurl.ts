@@ -1,6 +1,6 @@
 import { angleAt, leanFromVerticalDeg } from '../geometry';
 import type { RepDefinition } from './createAnalyzer';
-import { maxOverSides, minOverSides } from './helpers';
+import { maxOverSides, minOverTrustedSides, torsoElevation } from './helpers';
 
 /** Works for both-arm or alternating curls: each curl counts as 1 rep. */
 export const bicepCurl: RepDefinition = {
@@ -12,8 +12,13 @@ export const bicepCurl: RepDefinition = {
   requiredJoints: ['shoulder', 'elbow', 'wrist', 'hip'],
   // Elbow angle of the working arm: ~165° arm down, ~45° fully curled.
   measure: (lms, j, aspect) =>
-    minOverSides(lms, ['shoulder', 'elbow', 'wrist'], (s) => angleAt(lms[s.shoulder], lms[s.elbow], lms[s.wrist], aspect), j),
+    // far arm/leg only when clearly visible (side view: it is often hidden and guessed)
+    minOverTrustedSides(lms, ['shoulder', 'elbow', 'wrist'], (s) => angleAt(lms[s.shoulder], lms[s.elbow], lms[s.wrist], aspect), j),
   counter: { direction: 'decrease', restThreshold: 150, startThreshold: 130, activeThreshold: 60, limit: 45 },
+  position: {
+    message: 'Stand up straight to start',
+    isIn: (lms, j, aspect) => torsoElevation(lms, j, aspect) > 55,
+  },
   partialMessage: 'Curl all the way up',
   // count each side separately ("Left 5 · Right 5")
   sides: {

@@ -1,7 +1,7 @@
 import { angleAt } from '../geometry';
 import { LM } from '../landmarks';
 import type { RepDefinition } from './createAnalyzer';
-import { minOverSides } from './helpers';
+import { minOverSides, onFeet, torsoElevation } from './helpers';
 
 export const jumpingJacks: RepDefinition = {
   id: 'jumping-jacks',
@@ -14,6 +14,10 @@ export const jumpingJacks: RepDefinition = {
   measure: (lms, j, aspect) =>
     minOverSides(lms, ['hip', 'shoulder', 'wrist'], (s) => angleAt(lms[s.hip], lms[s.shoulder], lms[s.wrist], aspect), j),
   counter: { direction: 'increase', restThreshold: 40, startThreshold: 70, activeThreshold: 140, limit: 165 },
+  position: {
+    message: 'Stand up straight to start',
+    isIn: (lms, j, aspect) => onFeet(lms, j, aspect) && torsoElevation(lms, j, aspect) > 55,
+  },
   partialMessage: 'Raise your arms fully',
   // Done fast on purpose: no 'Slow down'.
   minRepMs: 0,

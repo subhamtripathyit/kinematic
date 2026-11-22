@@ -1,4 +1,5 @@
 import { angleAt } from '../geometry';
+import { onFeet } from './helpers';
 import type { RepDefinition } from './createAnalyzer';
 
 /** Romanian deadlift: hinge at the hips with soft knees. */
@@ -12,6 +13,10 @@ export const deadlift: RepDefinition = {
   // Hip angle: ~175° standing, ~100° at the bottom of the hinge.
   measure: (lms, j, aspect) => angleAt(lms[j.shoulder], lms[j.hip], lms[j.knee], aspect),
   counter: { direction: 'decrease', restThreshold: 160, startThreshold: 140, activeThreshold: 110, limit: 90 },
+  position: {
+    message: 'Stand up straight to start',
+    isIn: (lms, j, aspect) => onFeet(lms, j, aspect),
+  },
   partialMessage: 'Hinge further: push your hips back',
   checks: [
     {

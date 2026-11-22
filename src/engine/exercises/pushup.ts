@@ -1,4 +1,5 @@
 import { angleAt } from '../geometry';
+import { bodyHorizontal } from './helpers';
 import type { RepDefinition } from './createAnalyzer';
 
 export const pushup: RepDefinition = {
@@ -11,6 +12,10 @@ export const pushup: RepDefinition = {
   // Elbow angle: ~170° arms straight, ~80–90° at the bottom.
   measure: (lms, j, aspect) => angleAt(lms[j.shoulder], lms[j.elbow], lms[j.wrist], aspect),
   counter: { direction: 'decrease', restThreshold: 155, startThreshold: 135, activeThreshold: 100, limit: 75 },
+  position: {
+    message: 'Get into push-up position',
+    isIn: (lms, j, aspect) => bodyHorizontal(lms, j, aspect),
+  },
   partialMessage: 'Go lower',
   checks: [
     {

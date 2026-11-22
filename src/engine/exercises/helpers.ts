@@ -1,4 +1,4 @@
-import { isVisible } from '../geometry';
+import { elevationDeg, isVisible } from '../geometry';
 import { sideJoints, type Joints } from '../landmarks';
 import type { Landmark } from '../types';
 
@@ -71,4 +71,55 @@ export function heelLifted(lms: Landmark[], j: Joints, aspect: number): boolean 
   const shin = Math.hypot((lms[j.knee].x - lms[j.ankle].x) * aspect, lms[j.knee].y - lms[j.ankle].y);
   if (shin === 0) return false;
   return (lms[foot.toe].y - lms[foot.heel].y) / shin > 0.15;
+}
+
+// ---------- Body position checks (is the person in the exercise's position at all?) ----------
+// Each returns true when a needed point isn't visible: then we can't tell, so we don't block counting.
+
+const dist = (a: Landmark, b: Landmark, aspect: number) => Math.hypot((a.x - b.x) * aspect, a.y - b.y);
+
+/** Torso angle from the floor: ~0° lying flat, ~90° standing or sitting tall. */
+export function torsoElevation(lms: Landmark[], j: Joints, aspect: number): number {
+  return elevationDeg(lms[j.hip], lms[j.shoulder], aspect);
+}
+
+/** Standing on your feet: ankles well below hips (also true at the bottom of a squat or lunge). */
+export function onFeet(lms: Landmark[], j: Joints, aspect: number): boolean {
+  if (!isVisible(lms, [j.hip, j.knee, j.ankle])) return true;
+  const leg = dist(lms[j.hip], lms[j.knee], aspect) + dist(lms[j.knee], lms[j.ankle], aspect);
+  return leg > 0 && (lms[j.ankle].y - lms[j.hip].y) / leg > 0.3;
+}
+
+/** Lying on your back with knees bent up (crunch, sit-up, glute bridge): knees higher than hips. */
+export function kneesUp(lms: Landmark[], j: Joints): boolean {
+  if (!isVisible(lms, [j.hip, j.knee])) return true;
+  return lms[j.knee].y < lms[j.hip].y + 0.03;
+}
+
+/** Body roughly horizontal, like a plank (push-up, mountain climbers). */
+export function bodyHorizontal(lms: Landmark[], j: Joints, aspect: number, maxDeg = 40): boolean {
+  if (!isVisible(lms, [j.shoulder, j.ankle])) return torsoElevation(lms, j, aspect) < maxDeg + 10;
+  return elevationDeg(lms[j.ankle], lms[j.shoulder], aspect) < maxDeg;
+}
+
+/** Hanging from a bar: hands above the shoulders. */
+export function hanging(lms: Landmark[], j: Joints): boolean {
+  if (!isVisible(lms, [j.wrist, j.shoulder])) return true;
+  return lms[j.wrist].y < lms[j.shoulder].y;
+}
+
+/**
+ * Like minOverSides, but the far side only counts when the camera clearly sees it.
+ * In a side view the far arm/leg is partly hidden and its position is often a guess,
+ * which used to count reps nobody did.
+ */
+export function minOverTrustedSides(lms: Landmark[], needed: (keyof Joints)[], fn: (j: Joints) => number, fallback: Joints): number {
+  const vis = (j: Joints) => needed.reduce((sum, k) => sum + (lms[j[k]]?.visibility ?? 0), 0) / needed.length;
+  const [l, r] = BOTH_SIDES;
+  const near = vis(l) >= vis(r) ? l : r;
+  const far = near === l ? r : l;
+  const values: number[] = [];
+  if (isVisible(lms, needed.map((k) => near[k]))) values.push(fn(near));
+  if (isVisible(lms, needed.map((k) => far[k]), 0.75)) values.push(fn(far));
+  return values.length ? Math.min(...values) : fn(fallback);
 }

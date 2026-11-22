@@ -1,4 +1,4 @@
-import { sideDifference } from './helpers';
+import { hanging, sideDifference } from './helpers';
 import { angleAt } from '../geometry';
 import { LM } from '../landmarks';
 import type { RepDefinition } from './createAnalyzer';
@@ -13,6 +13,10 @@ export const pullup: RepDefinition = {
   // Elbow angle: ~170° hanging, ~60° at the top.
   measure: (lms, j, aspect) => angleAt(lms[j.shoulder], lms[j.elbow], lms[j.wrist], aspect),
   counter: { direction: 'decrease', restThreshold: 150, startThreshold: 130, activeThreshold: 80, limit: 55 },
+  position: {
+    message: 'Hang from the bar to start',
+    isIn: (lms, j) => hanging(lms, j),
+  },
   partialMessage: 'Pull higher',
   checks: [
     {

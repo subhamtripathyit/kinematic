@@ -1,4 +1,4 @@
-import { heelLifted } from './helpers';
+import { heelLifted, onFeet, torsoElevation } from './helpers';
 import { angleAt, leanFromVerticalDeg } from '../geometry';
 import type { RepDefinition } from './createAnalyzer';
 
@@ -12,6 +12,10 @@ export const squat: RepDefinition = {
   // Knee angle: ~175° standing, ~90° at parallel.
   measure: (lms, j, aspect) => angleAt(lms[j.hip], lms[j.knee], lms[j.ankle], aspect),
   counter: { direction: 'decrease', restThreshold: 160, startThreshold: 140, activeThreshold: 100, limit: 75 },
+  position: {
+    message: 'Stand up straight to start',
+    isIn: (lms, j, aspect) => onFeet(lms, j, aspect) && torsoElevation(lms, j, aspect) > 25,
+  },
   partialMessage: 'Go deeper',
   checks: [
     {

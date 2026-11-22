@@ -1,6 +1,6 @@
 import { angleAt } from '../geometry';
 import type { RepDefinition } from './createAnalyzer';
-import { minOverSides, sideDifference } from './helpers';
+import { minOverSides, sideDifference, torsoElevation } from './helpers';
 
 export const shoulderPress: RepDefinition = {
   id: 'shoulder-press',
@@ -13,6 +13,10 @@ export const shoulderPress: RepDefinition = {
   measure: (lms, j, aspect) =>
     minOverSides(lms, ['shoulder', 'elbow', 'wrist'], (s) => angleAt(lms[s.shoulder], lms[s.elbow], lms[s.wrist], aspect), j),
   counter: { direction: 'increase', restThreshold: 100, startThreshold: 120, activeThreshold: 160, limit: 172 },
+  position: {
+    message: 'Sit or stand tall to start',
+    isIn: (lms, j, aspect) => torsoElevation(lms, j, aspect) > 55,
+  },
   partialMessage: 'Press all the way up',
   checks: [
     {

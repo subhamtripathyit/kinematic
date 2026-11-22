@@ -392,7 +392,7 @@ export function WorkoutScreen({
         const check = analyzer.update(frame);
         if (ctx) drawSkeleton(ctx, frame, check.inFrame);
         // ready = whole body visible, and (for rep exercises) standing in the start position
-        const ready = check.inFrame && (hold || check.debug.phase === 'rest');
+        const ready = check.inFrame && check.feedback?.id !== 'rep-position' && (hold || check.debug.phase === 'rest');
         const framingTip = check.feedback && check.feedback.level !== 'good' ? check.feedback : null;
         const tipId = framingTip?.id ?? null;
         if (tipId !== shownFeedbackId) {

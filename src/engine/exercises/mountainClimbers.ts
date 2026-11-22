@@ -1,6 +1,6 @@
 import { angleAt } from '../geometry';
 import type { RepDefinition } from './createAnalyzer';
-import { maxOverSides, minOverSides } from './helpers';
+import { maxOverSides, minOverTrustedSides, torsoElevation } from './helpers';
 
 /** Each knee drive (either leg) counts as 1 rep. */
 export const mountainClimbers: RepDefinition = {
@@ -12,8 +12,13 @@ export const mountainClimbers: RepDefinition = {
   requiredJoints: ['shoulder', 'hip', 'knee', 'ankle'],
   // Hip angle of the driving leg: ~165° leg back, ~90° knee at chest.
   measure: (lms, j, aspect) =>
-    minOverSides(lms, ['shoulder', 'hip', 'knee'], (s) => angleAt(lms[s.shoulder], lms[s.hip], lms[s.knee], aspect), j),
+    // far arm/leg only when clearly visible (side view: it is often hidden and guessed)
+    minOverTrustedSides(lms, ['shoulder', 'hip', 'knee'], (s) => angleAt(lms[s.shoulder], lms[s.hip], lms[s.knee], aspect), j),
   counter: { direction: 'decrease', restThreshold: 145, startThreshold: 130, activeThreshold: 100, limit: 80 },
+  position: {
+    message: 'Get into plank position',
+    isIn: (lms, j, aspect) => torsoElevation(lms, j, aspect) < 50,
+  },
   partialMessage: 'Drive your knee further in',
   // Done fast on purpose: no 'Slow down'.
   minRepMs: 0,
