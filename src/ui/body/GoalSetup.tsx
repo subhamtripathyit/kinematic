@@ -1,8 +1,13 @@
 import { useMemo, useState } from 'react';
 import { t } from '../../i18n';
 import {
+  MAX_CM,
   MAX_KG,
+  MIN_CM,
   MIN_KG,
+  cleanNumber,
+  maxTargetDate,
+  type HeightUnit,
   bmi,
   bmiCategory,
   formatWeight,
@@ -42,6 +47,7 @@ export function GoalSetup({ unit: initialUnit, initial, currentKg, onSave, onCan
   const startKg = currentKg ?? initial?.startWeightKg ?? null;
   const [current, setCurrent] = useState(startKg ? toDisplay(startKg, initialUnit).toFixed(1) : '');
   const [goal, setGoal] = useState(initial ? toDisplay(initial.goalWeightKg, initialUnit).toFixed(1) : '');
+  const [hUnit, setHUnit] = useState<HeightUnit>(initial?.heightUnit ?? (initialUnit === 'kg' ? 'cm' : 'ft'));
   const [heightCm, setHeightCm] = useState(initial?.heightCm ? String(Math.round(initial.heightCm)) : '');
   const [feet, setFeet] = useState(initial?.heightCm ? String(Math.floor(initial.heightCm / 2.54 / 12)) : '');
   const [inches, setInches] = useState(initial?.heightCm ? String(Math.round((initial.heightCm / 2.54) % 12)) : '');
@@ -56,10 +62,41 @@ export function GoalSetup({ unit: initialUnit, initial, currentKg, onSave, onCan
     setUnit(u);
   };
 
+  /** Height unit is separate from the weight unit (kg + feet is common). Converts what's typed. */
+  const switchHeightUnit = (u: HeightUnit) => {
+    if (u === hUnit) return;
+    const cm = heightVal;
+    if (u === 'cm') setHeightCm(cm !== undefined ? String(Math.round(cm)) : '');
+    else {
+      const totalIn = cm !== undefined ? Math.round(cm / 2.54) : null;
+      setFeet(totalIn !== null ? String(Math.floor(totalIn / 12)) : '');
+      setInches(totalIn !== null ? String(totalIn % 12) : '');
+    }
+    setHUnit(u);
+  };
+
   const currentKgVal = current ? fromDisplay(Number(current), unit) : NaN;
   const goalKgVal = type === 'maintain' ? currentKgVal : goal ? fromDisplay(Number(goal), unit) : NaN;
   const heightVal =
-    unit === 'kg' ? (heightCm ? Number(heightCm) : undefined) : feet ? (Number(feet) * 12 + Number(inches || 0)) * 2.54 : undefined;
+    hUnit === 'cm' ? (heightCm ? Number(heightCm) : undefined) : feet ? (Number(feet) * 12 + Number(inches || 0)) * 2.54 : undefined;
+
+  // Shown live under each box, not only on Save.
+  const inRange = (kg: number) => kg >= MIN_KG && kg <= MAX_KG;
+  const rangeText = { min: formatWeight(MIN_KG, unit, 0), max: formatWeight(MAX_KG, unit, 0) };
+  const currentError = current && !inRange(currentKgVal) ? t('Enter your current weight ({min} – {max}).', rangeText) : null;
+  const goalError = type !== 'maintain' && goal && !inRange(goalKgVal) ? t('Enter a goal weight ({min} – {max}).', rangeText) : null;
+  const heightError =
+    heightVal !== undefined && (heightVal < MIN_CM || heightVal > MAX_CM || Number(inches || 0) > 11)
+      ? t('Height looks off. Check the number (100–250 cm, or about 3′3″ – 8′2″).')
+      : null;
+  const latestTarget = maxTargetDate();
+  const targetError = !target
+    ? null
+    : target <= todayKey()
+      ? t('The target date must be in the future.')
+      : target > latestTarget
+        ? t('Pick a target date within {n} years.', { n: 10 })
+        : null;
 
   const numbersOk = Number.isFinite(currentKgVal) && Number.isFinite(goalKgVal);
   const suggestion = numbersOk ? suggestedTargetDate(type, currentKgVal, goalKgVal) : null;
@@ -68,24 +105,19 @@ export function GoalSetup({ unit: initialUnit, initial, currentKg, onSave, onCan
 
   const directionError = useMemo(() => {
     if (!numbersOk || type === 'maintain') return null;
-    if (type === 'lose' && goalKgVal >= currentKgVal) return 'For a weight-loss goal, the goal weight must be below your current weight.';
-    if (type === 'gain' && goalKgVal <= currentKgVal) return 'For a weight-gain goal, the goal weight must be above your current weight.';
+    if (type === 'lose' && goalKgVal >= currentKgVal) return t('For a weight-loss goal, the goal weight must be below your current weight.');
+    if (type === 'gain' && goalKgVal <= currentKgVal) return t('For a weight-gain goal, the goal weight must be above your current weight.');
     return null;
   }, [numbersOk, type, goalKgVal, currentKgVal]);
 
   const save = () => {
-    const inRange = (kg: number) => kg >= MIN_KG && kg <= MAX_KG;
-    if (!Number.isFinite(currentKgVal) || !inRange(currentKgVal)) {
-      return setError(t('Enter your current weight ({min} – {max}).', { min: formatWeight(MIN_KG, unit, 0), max: formatWeight(MAX_KG, unit, 0) }));
-    }
+    if (!Number.isFinite(currentKgVal) || !inRange(currentKgVal)) return setError(t('Enter your current weight ({min} – {max}).', rangeText));
     if (type !== 'maintain' && (!Number.isFinite(goalKgVal) || !inRange(goalKgVal))) {
-      return setError(t('Enter a goal weight ({min} – {max}).', { min: formatWeight(MIN_KG, unit, 0), max: formatWeight(MAX_KG, unit, 0) }));
+      return setError(t('Enter a goal weight ({min} – {max}).', rangeText));
     }
     if (directionError) return setError(directionError);
-    if (heightVal !== undefined && (heightVal < 100 || heightVal > 250)) {
-      return setError(t('Height looks off. Check the number (100–250 cm, or about 3′3″ – 8′2″).'));
-    }
-    if (target && target <= todayKey()) return setError(t('The target date must be in the future.'));
+    if (heightError) return setError(heightError);
+    if (targetError) return setError(targetError);
     onSave(
       {
         type,
@@ -94,6 +126,7 @@ export function GoalSetup({ unit: initialUnit, initial, currentKg, onSave, onCan
         startDate: initial && initial.type === type ? initial.startDate : todayKey(),
         targetDate: target || undefined,
         heightCm: heightVal,
+        heightUnit: hUnit,
       },
       unit,
       currentKgVal,
@@ -104,7 +137,7 @@ export function GoalSetup({ unit: initialUnit, initial, currentKg, onSave, onCan
     <section className={styles.card}>
       <div className={styles.headRow}>
         <h1 className={styles.title}>{initial ? t('Edit your goal') : t('Set your body goal')}</h1>
-        <div className={styles.unitToggle} role="radiogroup" aria-label={t('Units')}>
+        <div className={styles.unitToggle} role="radiogroup" aria-label={t('Weight unit')}>
           {(['kg', 'lb'] as const).map((u) => (
             <button key={u} role="radio" aria-checked={unit === u} className={unit === u ? styles.unitActive : ''} onClick={() => switchUnit(u)}>
               {u}
@@ -135,32 +168,79 @@ export function GoalSetup({ unit: initialUnit, initial, currentKg, onSave, onCan
       <div className={styles.fields}>
         <label className={styles.field}>
           <span>{t('Current weight')} ({unit})</span>
-          <input type="number" inputMode="decimal" step="0.1" value={current} onChange={(e) => { setCurrent(e.target.value); setError(null); }} />
+          <input
+            type="number"
+            inputMode="decimal"
+            step="0.1"
+            min={Math.round(toDisplay(MIN_KG, unit))}
+            max={Math.round(toDisplay(MAX_KG, unit))}
+            value={current}
+            onChange={(e) => {
+              const v = cleanNumber(e.target.value, 3, 1);
+              if (v === null) return;
+              setCurrent(v);
+              setError(null);
+            }}
+          />
+          {currentError && <span className={styles.fieldError}>{currentError}</span>}
         </label>
         {type !== 'maintain' && (
           <label className={styles.field}>
             <span>{t('Goal weight')} ({unit})</span>
-            <input type="number" inputMode="decimal" step="0.1" value={goal} onChange={(e) => { setGoal(e.target.value); setError(null); }} />
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.1"
+              min={Math.round(toDisplay(MIN_KG, unit))}
+              max={Math.round(toDisplay(MAX_KG, unit))}
+              value={goal}
+              onChange={(e) => {
+                const v = cleanNumber(e.target.value, 3, 1);
+                if (v === null) return;
+                setGoal(v);
+                setError(null);
+              }}
+            />
+            {(goalError ?? directionError) && <span className={styles.fieldError}>{goalError ?? directionError}</span>}
           </label>
         )}
-        {unit === 'kg' ? (
-          <label className={styles.field}>
-            <span>{t('Height (cm, optional)')}</span>
-            <input type="number" inputMode="numeric" value={heightCm} onChange={(e) => setHeightCm(e.target.value)} />
-          </label>
-        ) : (
-          <div className={styles.field}>
-            <span>{t('Height (optional)')}</span>
+        <div className={styles.field}>
+          <span className={styles.labelRow}>
+            {t('Height (optional)')}
+            <span className={styles.unitToggleSmall} role="radiogroup" aria-label={t('Height unit')}>
+              {(['cm', 'ft'] as const).map((u) => (
+                <button key={u} type="button" role="radio" aria-checked={hUnit === u} className={hUnit === u ? styles.unitActive : ''} onClick={() => switchHeightUnit(u)}>
+                  {u === 'cm' ? 'cm' : 'ft / in'}
+                </button>
+              ))}
+            </span>
+          </span>
+          {hUnit === 'cm' ? (
+            <input
+              type="number"
+              inputMode="numeric"
+              min={MIN_CM}
+              max={MAX_CM}
+              aria-label={t('Height (cm, optional)')}
+              value={heightCm}
+              onChange={(e) => {
+                const v = cleanNumber(e.target.value, 3, 0);
+                if (v !== null) setHeightCm(v);
+              }}
+            />
+          ) : (
             <div className={styles.feetInches}>
-              <input type="number" inputMode="numeric" placeholder={t('ft')} aria-label={t('Feet')} value={feet} onChange={(e) => setFeet(e.target.value)} />
-              <input type="number" inputMode="numeric" placeholder={t('in')} aria-label={t('Inches')} value={inches} onChange={(e) => setInches(e.target.value)} />
+              <input type="number" inputMode="numeric" min={3} max={8} placeholder={t('ft')} aria-label={t('Feet')} value={feet} onChange={(e) => { const v = cleanNumber(e.target.value, 1, 0); if (v !== null) setFeet(v); }} />
+              <input type="number" inputMode="numeric" min={0} max={11} placeholder={t('in')} aria-label={t('Inches')} value={inches} onChange={(e) => { const v = cleanNumber(e.target.value, 2, 0); if (v !== null) setInches(v); }} />
             </div>
-          </div>
-        )}
+          )}
+          {heightError && <span className={styles.fieldError}>{heightError}</span>}
+        </div>
         {type !== 'maintain' && (
           <label className={styles.field}>
             <span>{t('Target date (optional)')}</span>
-            <input type="date" value={target} min={todayKey()} onChange={(e) => { setTarget(e.target.value); setError(null); }} />
+            <input type="date" value={target} min={todayKey()} max={latestTarget} onChange={(e) => { setTarget(e.target.value); setError(null); }} />
+            {targetError && <span className={styles.fieldError}>{targetError}</span>}
           </label>
         )}
       </div>

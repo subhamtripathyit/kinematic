@@ -17,7 +17,11 @@ export interface BodyGoal {
   /** YYYY-MM-DD, optional */
   targetDate?: string;
   heightCm?: number;
+  /** how the user likes to enter height (stored in cm either way) */
+  heightUnit?: HeightUnit;
 }
+
+export type HeightUnit = 'cm' | 'ft';
 
 export interface WeightEntry {
   id: string;
@@ -37,6 +41,28 @@ const DAY_MS = 86_400_000;
 export const LB_PER_KG = 2.2046226218;
 export const MIN_KG = 25;
 export const MAX_KG = 350;
+export const MIN_CM = 100;
+export const MAX_CM = 250;
+/** A target date can be at most this many years ahead. */
+export const MAX_TARGET_YEARS = 10;
+
+/** Latest allowed target date, YYYY-MM-DD. */
+export function maxTargetDate(): string {
+  const d = new Date();
+  d.setFullYear(d.getFullYear() + MAX_TARGET_YEARS);
+  return dayKey(d);
+}
+
+/**
+ * Keeps a number box sensible while typing: digits only (no minus sign),
+ * at most `maxDigits` before the decimal point and `decimals` after it.
+ * Returns null if the new text should be ignored.
+ */
+export function cleanNumber(text: string, maxDigits: number, decimals: number): string | null {
+  const t = text.replace(',', '.');
+  const pattern = decimals > 0 ? new RegExp(`^\\d{0,${maxDigits}}(\\.\\d{0,${decimals}})?$`) : new RegExp(`^\\d{0,${maxDigits}}$`);
+  return pattern.test(t) ? t : null;
+}
 
 // ---------- units ----------
 

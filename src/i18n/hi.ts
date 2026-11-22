@@ -564,4 +564,9 @@ export const HI: Record<string, string> = {
   "Deeper reps, stricter form and a slower tempo.": "ज़्यादा गहरे रेप्स, सख़्त फ़ॉर्म और धीमी रफ़्तार।",
   "Even deeper reps and strict form. Finish every rep fully.": "और गहरे रेप्स और सख़्त फ़ॉर्म। हर रेप पूरा करें।",
   "Deepest reps, strictest form and tempo.": "सबसे गहरे रेप्स, सबसे सख़्त फ़ॉर्म और रफ़्तार।",
+  "Pick a target date within {n} years.": "{n} साल के अंदर की लक्ष्य तारीख चुनें।",
+  "For a weight-loss goal, the goal weight must be below your current weight.": "वज़न घटाने के लक्ष्य में, लक्ष्य वज़न आपके मौजूदा वज़न से कम होना चाहिए।",
+  "For a weight-gain goal, the goal weight must be above your current weight.": "वज़न बढ़ाने के लक्ष्य में, लक्ष्य वज़न आपके मौजूदा वज़न से ज़्यादा होना चाहिए।",
+  "Weight unit": "वज़न की इकाई",
+  "Height unit": "लंबाई की इकाई",
 };

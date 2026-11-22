@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { t } from '../../i18n';
 import {
+  cleanNumber,
   MAX_KG,
   MIN_KG,
   addEntry,
@@ -210,7 +211,9 @@ export function BodyScreen() {
               value={value}
               placeholder={toDisplay(current, unit).toFixed(1)}
               onChange={(e) => {
-                setValue(e.target.value);
+                const v = cleanNumber(e.target.value, 3, 1);
+                if (v === null) return;
+                setValue(v);
                 setError(null);
               }}
               onKeyDown={(e) => e.key === 'Enter' && addWeight()}
