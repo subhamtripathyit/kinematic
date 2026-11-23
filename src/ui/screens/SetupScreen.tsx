@@ -60,7 +60,9 @@ export function SetupScreen({
   const [target, setTarget] = useState(String(initialPlan.target));
   const [rest, setRest] = useState(initialPlan.restSec);
   const [error, setError] = useState<string | null>(null);
-  const [showDemo, setShowDemo] = useState(false);
+  // the demo is open by default (manager feedback); it only reads itself aloud when the user opens it
+  const [showDemo, setShowDemo] = useState(true);
+  const [openedByUser, setOpenedByUser] = useState(false);
 
   const limits = hold ? { min: 5, max: 600 } : { min: 1, max: 100 };
 
@@ -96,12 +98,15 @@ export function SetupScreen({
         </p>
         <h1 className={styles.title}>{t(exercise.name)}</h1>
         <p className={styles.hint}>{t(exercise.setupHint)}</p>
-        <button className={styles.demoButton} onClick={() => setShowDemo((v) => !v)} aria-expanded={showDemo}>
+        <button className={styles.demoButton} onClick={() => {
+            setOpenedByUser(true);
+            setShowDemo((v) => !v);
+          }} aria-expanded={showDemo}>
           {showDemo ? t('Hide demo') : t('How to do it')}
         </button>
       </div>
 
-      {showDemo && <FormDemo exerciseId={exerciseId} speakOnOpen={voiceEnabled && voiceSupported} />}
+      {showDemo && <FormDemo exerciseId={exerciseId} speakOnOpen={openedByUser && voiceEnabled && voiceSupported} />}
 
       <div className={styles.modes} role="radiogroup" aria-label={t('Workout type')}>
         <button

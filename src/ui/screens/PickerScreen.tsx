@@ -25,7 +25,6 @@ export function PickerScreen({
     return {
       streak: currentStreak(history),
       week: workoutsThisWeek(history),
-      any: history.length > 0,
       weighInDue: body.goal !== null && (sinceWeighIn === null || sinceWeighIn >= 7),
     };
   });
@@ -34,7 +33,8 @@ export function PickerScreen({
 
   return (
     <section className={styles.screen}>
-      {progress.any && (
+      {/* shown from the very first visit (0-day streak, 0/3 this week), so new users see the goal */}
+      {(
         <div className={styles.progressChip}>
           <span>🔥 {t('{n}-day streak', { n: progress.streak })}</span>
           <span>

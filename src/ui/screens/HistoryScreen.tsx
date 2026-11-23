@@ -125,6 +125,10 @@ export function HistoryScreen({ onStart, onImported, weeklyGoal, onWeeklyGoalCha
         <button className="btn-primary" onClick={onStart}>
           {t('Start a workout')}
         </button>
+        {/* New users see the whole dashboard from day one: streak, weekly goal, calendar and the badges to unlock. */}
+        <div className={styles.fullWidth}>
+          <ProgressOverview history={history} weeklyGoal={weeklyGoal} onWeeklyGoalChange={onWeeklyGoalChange} />
+        </div>
         <p className={styles.muted}>{t('Have a backup from another browser or device?')}</p>
         {backupControls}
         {message && <p className={message.error ? styles.error : styles.success}>{message.text}</p>}

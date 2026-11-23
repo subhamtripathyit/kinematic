@@ -205,7 +205,9 @@ function UpNext({
   // First exercise waits for the user; later ones start after the rest between exercises.
   const autoStart = !isFirst && routine.restBetweenSec > 0;
   const [remaining, setRemaining] = useState(routine.restBetweenSec);
-  const [showDemo, setShowDemo] = useState(false);
+  // the demo is open by default (manager feedback); it only reads itself aloud when the user opens it
+  const [showDemo, setShowDemo] = useState(true);
+  const [openedByUser, setOpenedByUser] = useState(false);
   // when the rest between exercises ends; the −10s/+10s buttons move it
   const endsAtRef = useRef(0);
   const onStartRef = useRef(onStart);
@@ -261,11 +263,14 @@ function UpNext({
       </p>
       <p className={styles.muted}>{t(def.setupHint)}</p>
       <div>
-        <button className={setupStyles.demoButton} onClick={() => setShowDemo((v) => !v)} aria-expanded={showDemo}>
+        <button className={setupStyles.demoButton} onClick={() => {
+            setOpenedByUser(true);
+            setShowDemo((v) => !v);
+          }} aria-expanded={showDemo}>
           {showDemo ? t('Hide demo') : t('How to do it')}
         </button>
       </div>
-      {showDemo && <FormDemo exerciseId={step.exerciseId} speakOnOpen={voiceEnabled && voiceSupported} />}
+      {showDemo && <FormDemo exerciseId={step.exerciseId} speakOnOpen={openedByUser && voiceEnabled && voiceSupported} />}
 
       {autoStart && (
         <div className={styles.countdown}>
