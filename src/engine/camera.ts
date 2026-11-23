@@ -3,8 +3,8 @@ export type CameraFacing = 'user' | 'environment';
 
 /**
  * Turns on the camera and plays it in the given <video> element.
- * - Asks for a frame shaped like the screen (portrait on an upright phone), so the
- *   browser doesn't crop off your head and feet.
+ * - Upright phone: asks for the camera's full 3:4 view (taller than wide) so nothing is
+ *   cropped off the sides and your whole body fits.
  * - Zooms all the way out on phones that support it, to fit your whole body.
  */
 export async function startCamera(video: HTMLVideoElement, facing: CameraFacing = 'user'): Promise<MediaStream> {
@@ -22,12 +22,13 @@ export async function openCamera(facing: CameraFacing = 'user'): Promise<MediaSt
   const portrait = window.matchMedia('(orientation: portrait)').matches;
   let stream: MediaStream;
   try {
+    // Phone cameras capture 4:3. Asking for a tall 9:16 picture made the browser crop the
+    // sides off that, so less of your body fit. Upright phone: ask for the camera's full
+    // 3:4 view instead (taller than wide, nothing cropped). Laptops: normal 16:9 webcam.
     stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { ideal: facing },
-        width: { ideal: portrait ? 720 : 1280 },
-        height: { ideal: portrait ? 1280 : 720 },
-      },
+      video: portrait
+        ? { facingMode: { ideal: facing }, aspectRatio: { ideal: 3 / 4 }, width: { ideal: 960 }, height: { ideal: 1280 } }
+        : { facingMode: { ideal: facing }, width: { ideal: 1280 }, height: { ideal: 720 } },
       audio: false,
     });
   } catch (err) {
