@@ -41,6 +41,12 @@ export class WorkoutSession {
   currentSet = 1;
   readonly results: SetResult[] = [];
   private restEndsAt = 0;
+  private restStartedAt = 0;
+
+  /** Free workout: rest has no end. It counts up until "Start next set". */
+  get openRest(): boolean {
+    return this.plan.mode === 'free';
+  }
 
   constructor(
     readonly plan: WorkoutPlan,
@@ -66,6 +72,11 @@ export class WorkoutSession {
     const isLast = this.plan.mode === 'plan' && setNumber >= this.plan.sets;
     if (isLast) {
       this.phase = 'done';
+    } else if (this.openRest) {
+      // free workout: rest as long as you like, the clock counts up
+      this.phase = 'resting';
+      this.restStartedAt = now;
+      this.restEndsAt = Infinity;
     } else if (this.plan.restSec > 0) {
       this.phase = 'resting';
       this.restEndsAt = now + this.plan.restSec * 1000;
@@ -77,7 +88,13 @@ export class WorkoutSession {
   }
 
   restRemainingSec(now: number): number {
-    return this.phase === 'resting' ? Math.max(0, Math.ceil((this.restEndsAt - now) / 1000)) : 0;
+    if (this.phase !== 'resting' || this.openRest) return 0;
+    return Math.max(0, Math.ceil((this.restEndsAt - now) / 1000));
+  }
+
+  /** Seconds rested so far (free workout's count-up clock). */
+  restElapsedSec(now: number): number {
+    return this.phase === 'resting' ? Math.max(0, Math.floor((now - this.restStartedAt) / 1000)) : 0;
   }
 
   /** Call every frame while resting. */
@@ -88,7 +105,7 @@ export class WorkoutSession {
 
   /** Lengthen (+) or shorten (-) the rest in progress. Never past maxSec in total remaining. */
   adjustRest(deltaSec: number, now: number, maxSec = 600): void {
-    if (this.phase !== 'resting') return;
+    if (this.phase !== 'resting' || this.openRest) return;
     const remaining = Math.max(0, this.restEndsAt - now) + deltaSec * 1000;
     this.restEndsAt = now + Math.min(Math.max(remaining, 0), maxSec * 1000);
   }

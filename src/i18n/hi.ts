@@ -578,4 +578,8 @@ export const HI: Record<string, string> = {
   "Lie on your back, knees bent, to start": "शुरू करने के लिए पीठ के बल लेटें, घुटने मोड़ें",
   "Hang from the bar to start": "शुरू करने के लिए बार से लटकें",
   "Get onto the bars to start": "शुरू करने के लिए बार पर आएँ",
+  "Resting": "आराम चल रहा है",
+  "Start next set": "अगला सेट शुरू करें",
+  "Next: set {n}": "अगला: सेट {n}",
+  "Set {n} done. Rest as long as you need.": "सेट {n} पूरा। जितना चाहें आराम करें।",
 };

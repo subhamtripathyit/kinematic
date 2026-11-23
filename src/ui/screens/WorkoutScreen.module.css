@@ -356,3 +356,10 @@
     max-height: 70vh;
   }
 }
+
+/* free workout: the big "Start next set" button on the rest screen */
+.bigButton {
+  min-width: 220px;
+  min-height: 56px;
+  font-size: 1.2rem;
+}

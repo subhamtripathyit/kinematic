@@ -186,7 +186,10 @@ export function WorkoutScreen({
     let hudValue: number | null = null;
     const hudNow = (now: number): Hud => {
       let main: string;
-      if (session.phase === 'resting') main = `${t('Rest')} ${formatDuration(session.restRemainingSec(now))}`;
+      if (session.phase === 'resting')
+        main = session.openRest
+          ? `${t('Resting')} ${formatDuration(session.restElapsedSec(now))}`
+          : `${t('Rest')} ${formatDuration(session.restRemainingSec(now))}`;
       else if (gate === 'countdown') main = String(Math.max(1, Math.ceil((gateEndsAt - now) / 1000)));
       else if (gate === 'position') main = t('Get in position');
       else main = hold ? formatDuration(hudCount) : t('{n} reps', { n: hudCount });
@@ -274,8 +277,14 @@ export function WorkoutScreen({
           setView({ phase: 'working', set: session.currentSet, restRemaining: 0 });
           return;
         }
-        voice.say(t('Set {n} done. Rest {s} seconds.', { n: event.setNumber, s: plan.restSec }), { interrupt: true });
         shownRest = -1;
+        if (session.openRest) {
+          // free workout: rest clock counts up; you start the next set yourself
+          voice.say(t('Set {n} done. Rest as long as you need.', { n: event.setNumber }), { interrupt: true });
+          setView({ phase: 'resting', set: event.setNumber, restRemaining: 0 });
+          return;
+        }
+        voice.say(t('Set {n} done. Rest {s} seconds.', { n: event.setNumber, s: plan.restSec }), { interrupt: true });
         setView({ phase: 'resting', set: event.setNumber, restRemaining: session.restRemainingSec(now) });
       } else {
         resetLiveState();
@@ -341,7 +350,14 @@ export function WorkoutScreen({
       }
 
       // Rest countdown runs on the clock, not on video frames.
-      if (session.phase === 'resting') {
+      if (session.phase === 'resting' && session.openRest) {
+        // free workout: show how long you've rested (counting up)
+        const elapsed = session.restElapsedSec(now);
+        if (elapsed !== shownRest) {
+          shownRest = elapsed;
+          setView((v) => ({ ...v, restRemaining: elapsed }));
+        }
+      } else if (session.phase === 'resting') {
         const remaining = session.restRemainingSec(now);
         if (remaining !== shownRest) {
           shownRest = remaining;
@@ -597,7 +613,17 @@ export function WorkoutScreen({
             </button>
           </div>
         )}
-        {resting && (
+        {resting && free && (
+          <div className={styles.overlay}>
+            <p className={styles.restLabel}>{t('Resting')}</p>
+            <p className={styles.restTime}>{formatDuration(view.restRemaining)}</p>
+            <p className={styles.small}>{t('Next: set {n}', { n: view.set + 1 })}</p>
+            <button className={`btn-primary ${styles.bigButton}`} onClick={() => actionsRef.current?.skipRest()}>
+              {t('Start next set')}
+            </button>
+          </div>
+        )}
+        {resting && !free && (
           <div className={styles.overlay}>
             <p className={styles.restLabel}>{t('Rest')}</p>
             <p className={styles.restTime}>{formatDuration(view.restRemaining)}</p>

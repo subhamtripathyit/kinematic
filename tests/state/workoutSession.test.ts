@@ -49,15 +49,22 @@ describe('WorkoutSession', () => {
     expect(s.results).toHaveLength(0);
   });
 
-  it('free mode never ends on its own and moves straight to the next set', () => {
+  it('free mode never ends on its own; rest counts up until you start the next set', () => {
     const s = new WorkoutSession({ mode: 'free', sets: 3, target: 10, restSec: 0 }, 'reps');
     expect(s.updateWorking(stats(50), 0)).toBeNull();
     expect(s.completeSet(stats(50), 0)).toEqual({ type: 'set-complete', setNumber: 1, isLast: false });
+    // open rest: no countdown, no end
+    expect(s.phase).toBe('resting');
+    expect(s.restRemainingSec(5000)).toBe(0);
+    expect(s.restElapsedSec(95_400)).toBe(95);
+    expect(s.updateResting(10_000_000)).toBeNull();
+    // "Start next set"
+    expect(s.skipRest()).toEqual({ type: 'rest-over', nextSet: 2 });
     expect(s.phase).toBe('working');
-    expect(s.currentSet).toBe(2);
-    s.completeSet(stats(20), 0);
-    s.completeSet(stats(5), 0);
-    s.completeSet(stats(5), 0);
+    for (const reps of [20, 5, 5]) {
+      s.completeSet(stats(reps), 0);
+      s.skipRest();
+    }
     expect(s.phase).toBe('working');
     s.finishEarly(stats(0));
     expect(s.results.map((r) => r.stats.reps)).toEqual([50, 20, 5, 5]);
