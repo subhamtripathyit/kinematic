@@ -1,18 +1,26 @@
 # Kinematic
 
-Real-time workout form checker. Pick an exercise, stand in front of your laptop camera,
-and Kinematic counts your reps and tells you how to fix your form. Everything runs in the
-browser: your video is never uploaded.
+AI personal trainer in the browser. Pick an exercise, put your phone or laptop 2–3 m away,
+and Kinematic counts your reps, checks your form and coaches you out loud. Everything runs
+on your device: your video is never uploaded.
+
+Live: https://kinematic-one.vercel.app
 
 Features:
 - 18 exercises: 15 counted (reps) + 3 timed holds (plank, side plank, wall sit)
-- Sets, reps/seconds target and rest timer between sets
-- Voice coach (rep count, tips, rest countdown); can be turned off
-- Routines: run several exercises back to back (4 built-in + build your own)
-- Rep tempo ("Slow down") and form score per rep (tap "Show more" during a workout)
-- Workout history, progress chart and personal bests, saved in this browser (no account needed)
-- Backup: export / import your history and routines, or export a CSV for Excel
-- Debug panel for tuning (press D on the workout screen)
+- Live form feedback and a form score for every rep; left/right counting for lunges, curls and mountain climbers
+- Smart judging: reps only count in the right body position; camera glitches and hidden limbs are ignored
+- Voice coach in English and Hindi (whole app switches language)
+- Sets & reps with a rest timer (±10 s), or free workout with a count-up rest clock
+- 3-2-1 countdown, or start automatically when you're in position
+- Routines with 6 levels (absolute beginner → athlete): deeper reps and stricter form as the level goes up, plus routines recommended for your level
+- "How to do it" demo for every exercise
+- Record session: video with skeleton, reps, angles and tips drawn on it (optional sound), downloaded to your device
+- Body tracking: weight goal, healthy-pace check, BMI, estimated goal date
+- History: streaks, weekly goal, badges, progress charts, personal bests
+- Backup / import, CSV export and a PDF workout log
+- Built for phones: count and tips on the video, screen stays on, thumb-sized buttons
+- Debug panel for tuning (press D on the workout screen, laptop)
 
 See ROADMAP.md for what's planned next.
 
@@ -37,13 +45,13 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173 in Chrome or Edge and allow camera access.
+Open http://localhost:5173 in Chrome, Edge or Safari and allow camera access.
 The first load needs internet (it downloads the MediaPipe pose model, ~5 MB).
 
 Other commands:
 
 ```bash
-npm test            # engine unit tests
+npm test            # unit tests (counting, judging for all exercises, levels, body, history)
 npm run typecheck   # TypeScript check
 npm run build       # production build into dist/
 ```
@@ -53,24 +61,31 @@ npm run build       # production build into dist/
 ```
 src/
   engine/            the brain: plain TypeScript, no React
-    camera.ts          turns on the webcam
+    camera.ts          turns on the camera (full 3:4 view on phones)
     pose.ts            MediaPipe wrapper -> 33 body points per frame
     geometry.ts        angle maths, smoothing, "is the body in frame"
     repCounter.ts      generic rep counter (rest -> moving -> active -> rest)
     feedback.ts        keeps tips on screen steady (no flicker)
     drawing.ts         draws the skeleton on the canvas
-    voice.ts           voice coach (browser speech)
-    exercises/         one file per exercise: main angle, thresholds, form rules
+    voice.ts           voice coach (browser speech, English/Hindi)
+    recorder.ts        "Record session" video with overlays
+    exercises/         one file per exercise: main angle, thresholds, position check, form rules
+      levels.ts          the 6 training levels used by routines
+  i18n/              translations (Hindi); English text is the key
   ui/
-    screens/           Picker, Workout, Summary
-    components/        RepCounter, FeedbackText
+    screens/           Picker, Setup, Workout, Summary, Routines, History
+    body/              body weight goal + tracking
+    components/        shared pieces (rep counter, pickers, level picker, recording...)
+    demo/              "How to do it" animations
   state/
     workoutSession.ts  sets + rest timer logic
     session.ts         workout summary
     history.ts         saved workouts (localStorage)
-    settings.ts        voice on/off, last plan per exercise
+    settings.ts        voice, camera, level, language, last plan per exercise
+    routines.ts        built-in routines + scaling to a level
+    body.ts            weight goal and entries
   styles/            global CSS + variables
-tests/engine/        unit tests for the brain
+tests/              unit tests (engine + state)
 ```
 
 ## Add an exercise
