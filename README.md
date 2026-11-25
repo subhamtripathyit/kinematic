@@ -1,3 +1,5 @@
+<p align="center"><img src="public/logo.png" alt="Kinematic" width="220" /></p>
+
 # Kinematic
 
 AI personal trainer in the browser. Pick an exercise, put your phone or laptop 2–3 m away,
