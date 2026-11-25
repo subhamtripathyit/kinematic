@@ -137,13 +137,6 @@ export function BodyScreen() {
           </p>
         </div>
         <div className={styles.headButtons}>
-          <div className={styles.unitToggle} role="radiogroup" aria-label={t('Units')}>
-            {(['kg', 'lb'] as const).map((u) => (
-              <button key={u} role="radio" aria-checked={unit === u} className={unit === u ? styles.unitActive : ''} onClick={() => update({ ...data, unit: u })}>
-                {u}
-              </button>
-            ))}
-          </div>
           <button className="btn-secondary" onClick={() => setEditingGoal(true)}>
             {t('Edit goal')}
           </button>
@@ -203,7 +196,28 @@ export function BodyScreen() {
             <input type="date" value={date} max={todayKey()} onChange={(e) => setDate(e.target.value)} />
           </label>
           <label className={styles.field}>
-            <span>{t('Weight')} ({unit})</span>
+            <span className={styles.labelRow}>
+              {t('Weight')}
+              <span className={styles.unitToggleSmall} role="radiogroup" aria-label={t('Weight unit')}>
+                {(['kg', 'lb'] as const).map((u) => (
+                  <button
+                    key={u}
+                    type="button"
+                    role="radio"
+                    aria-checked={unit === u}
+                    className={unit === u ? styles.unitActive : ''}
+                    onClick={() => {
+                      if (u === unit) return;
+                      // convert what's typed, so 80 kg becomes 176.4 lb instead of "80 lb"
+                      if (value && !Number.isNaN(Number(value))) setValue(toDisplay(fromDisplay(Number(value), unit), u).toFixed(1));
+                      update({ ...data, unit: u });
+                    }}
+                  >
+                    {u}
+                  </button>
+                ))}
+              </span>
+            </span>
             <input
               type="number"
               inputMode="decimal"

@@ -137,13 +137,6 @@ export function GoalSetup({ unit: initialUnit, initial, currentKg, onSave, onCan
     <section className={styles.card}>
       <div className={styles.headRow}>
         <h1 className={styles.title}>{initial ? t('Edit your goal') : t('Set your body goal')}</h1>
-        <div className={styles.unitToggle} role="radiogroup" aria-label={t('Weight unit')}>
-          {(['kg', 'lb'] as const).map((u) => (
-            <button key={u} role="radio" aria-checked={unit === u} className={unit === u ? styles.unitActive : ''} onClick={() => switchUnit(u)}>
-              {u}
-            </button>
-          ))}
-        </div>
       </div>
       <p className={styles.muted}>{t('Saved only on this device. You can change it anytime.')}</p>
 
@@ -167,7 +160,17 @@ export function GoalSetup({ unit: initialUnit, initial, currentKg, onSave, onCan
 
       <div className={styles.fields}>
         <label className={styles.field}>
-          <span>{t('Current weight')} ({unit})</span>
+          <span className={styles.labelRow}>
+            {t('Current weight')}
+            {/* one switch for both weights: goal weight always uses the same unit */}
+            <span className={styles.unitToggleSmall} role="radiogroup" aria-label={t('Weight unit')}>
+              {(['kg', 'lb'] as const).map((u) => (
+                <button key={u} type="button" role="radio" aria-checked={unit === u} className={unit === u ? styles.unitActive : ''} onClick={() => switchUnit(u)}>
+                  {u}
+                </button>
+              ))}
+            </span>
+          </span>
           <input
             type="number"
             inputMode="decimal"
@@ -186,7 +189,10 @@ export function GoalSetup({ unit: initialUnit, initial, currentKg, onSave, onCan
         </label>
         {type !== 'maintain' && (
           <label className={styles.field}>
-            <span>{t('Goal weight')} ({unit})</span>
+            <span className={styles.labelRow}>
+              {t('Goal weight')}
+              <span className={styles.unitTag}>{unit}</span>
+            </span>
             <input
               type="number"
               inputMode="decimal"
