@@ -459,6 +459,9 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  /* same height on every field, so the boxes below line up */
+  min-height: 32px;
+  white-space: nowrap;
 }
 
 

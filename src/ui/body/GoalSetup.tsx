@@ -212,7 +212,7 @@ export function GoalSetup({ unit: initialUnit, initial, currentKg, onSave, onCan
         )}
         <div className={styles.field}>
           <span className={styles.labelRow}>
-            {t('Height (optional)')}
+            {t('Height')}
             <span className={styles.unitToggleSmall} role="radiogroup" aria-label={t('Height unit')}>
               {(['cm', 'ft'] as const).map((u) => (
                 <button key={u} type="button" role="radio" aria-checked={hUnit === u} className={hUnit === u ? styles.unitActive : ''} onClick={() => switchHeightUnit(u)}>
@@ -228,6 +228,7 @@ export function GoalSetup({ unit: initialUnit, initial, currentKg, onSave, onCan
               min={MIN_CM}
               max={MAX_CM}
               aria-label={t('Height (cm, optional)')}
+              placeholder={t('Optional')}
               value={heightCm}
               onChange={(e) => {
                 const v = cleanNumber(e.target.value, 3, 0);

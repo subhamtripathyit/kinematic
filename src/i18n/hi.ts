@@ -606,4 +606,6 @@ export const HI: Record<string, string> = {
   "Leg extension": "लेग एक्सटेंशन",
   "Leg curl": "लेग कर्ल",
   "Calf raises": "काफ़ रेज़",
+  "Height": "लंबाई",
+  "Optional": "ज़रूरी नहीं",
 };
