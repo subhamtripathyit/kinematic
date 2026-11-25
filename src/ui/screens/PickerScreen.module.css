@@ -151,3 +151,33 @@
   color: var(--text);
   cursor: pointer;
 }
+
+/* "Bodyweight" / "Gym" inside a body part */
+.subGroupTitle {
+  margin: 4px 0 -4px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* gym exercises that aren't built yet: visible but not tappable */
+.soonCard {
+  opacity: 0.55;
+  cursor: default;
+  border-style: dashed;
+}
+
+.soonCard:hover {
+  transform: none;
+}
+
+.soon {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--surface-2);
+  color: var(--text-muted);
+}

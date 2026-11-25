@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { t } from '../../i18n';
-import { exercisesByCategory, type Category } from '../../engine/exercises';
+import { exercisesByCategory, type Category, type ExerciseDefinition } from '../../engine/exercises';
+import { COMING_SOON, GYM_EXERCISE_IDS } from '../../engine/exercises/comingSoon';
 import { loadHistory } from '../../state/history';
 import { currentStreak, workoutsThisWeek } from '../../state/progress';
 import { daysSinceLastWeighIn, loadBody } from '../../state/body';
@@ -76,23 +77,59 @@ export function PickerScreen({
         ))}
       </div>
 
-      {visible.map((group) => (
-        <div key={group.id} className={styles.group}>
-          <h2 className={styles.groupTitle}>{t(group.label)}</h2>
-          <div className={styles.grid}>
-            {group.exercises.map((ex) => (
-              <button key={ex.id} className={styles.card} onClick={() => onSelect(ex.id)}>
-                <span className={styles.name}>{t(ex.name)}</span>
-                <span className={styles.badges}>
-                  <span className={styles.view}>{ex.cameraView === 'side' ? t('Side view') : t('Front view')}</span>
-                  {ex.kind === 'hold' && <span className={styles.timed}>{t('Timed hold')}</span>}
-                </span>
-                <span className={styles.hint}>{t(ex.setupHint)}</span>
-              </button>
-            ))}
+      {visible.map((group) => {
+        // Each body part: "Bodyweight" and "Gym" (weights + machines). Gym exercises not built yet show as "Coming soon".
+        const bodyweight = group.exercises.filter((ex) => !GYM_EXERCISE_IDS.has(ex.id));
+        const gym = group.exercises.filter((ex) => GYM_EXERCISE_IDS.has(ex.id));
+        const soon = COMING_SOON.filter((c) => c.category === group.id);
+        const hasGym = gym.length + soon.length > 0;
+        return (
+          <div key={group.id} className={styles.group}>
+            <h2 className={styles.groupTitle}>{t(group.label)}</h2>
+            {bodyweight.length > 0 && (
+              <>
+                {hasGym && <h3 className={styles.subGroupTitle}>{t('Bodyweight')}</h3>}
+                <div className={styles.grid}>
+                  {bodyweight.map((ex) => (
+                    <ExerciseCard key={ex.id} ex={ex} onSelect={onSelect} />
+                  ))}
+                </div>
+              </>
+            )}
+            {hasGym && (
+              <>
+                <h3 className={styles.subGroupTitle}>{t('Gym')}</h3>
+                <div className={styles.grid}>
+                  {gym.map((ex) => (
+                    <ExerciseCard key={ex.id} ex={ex} onSelect={onSelect} />
+                  ))}
+                  {soon.map((c) => (
+                    <div key={c.name} className={`${styles.card} ${styles.soonCard}`} aria-disabled="true">
+                      <span className={styles.name}>{t(c.name)}</span>
+                      <span className={styles.badges}>
+                        <span className={styles.soon}>{t('Coming soon')}</span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
-        </div>
-      ))}
+        );
+      })}
     </section>
+  );
+}
+
+function ExerciseCard({ ex, onSelect }: { ex: ExerciseDefinition; onSelect: (exerciseId: string) => void }) {
+  return (
+    <button className={styles.card} onClick={() => onSelect(ex.id)}>
+      <span className={styles.name}>{t(ex.name)}</span>
+      <span className={styles.badges}>
+        <span className={styles.view}>{ex.cameraView === 'side' ? t('Side view') : t('Front view')}</span>
+        {ex.kind === 'hold' && <span className={styles.timed}>{t('Timed hold')}</span>}
+      </span>
+      <span className={styles.hint}>{t(ex.setupHint)}</span>
+    </button>
   );
 }
