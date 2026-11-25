@@ -151,3 +151,11 @@
   font-size: 0.78rem;
   color: var(--text-muted);
 }
+
+/* touch screens: the weekly-goal dropdown needs a thumb-sized target */
+@media (pointer: coarse) {
+  .goal select {
+    min-height: 36px;
+    padding: 4px 8px;
+  }
+}
