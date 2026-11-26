@@ -123,3 +123,9 @@
   font-size: 0.85rem;
   cursor: pointer;
 }
+
+@media (pointer: coarse) {
+  .signOut {
+    min-height: 40px;
+  }
+}

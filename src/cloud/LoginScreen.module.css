@@ -1,42 +1,95 @@
 .page {
+  position: relative;
   min-height: 100dvh;
-  display: grid;
-  place-items: center;
-  padding: var(--page-pad);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: max(56px, env(safe-area-inset-top)) var(--page-pad) max(24px, env(safe-area-inset-bottom));
+  background: radial-gradient(ellipse 80% 45% at 50% 0%, rgba(56, 189, 248, 0.14), transparent 70%);
+}
+
+.langSwitch {
+  position: absolute;
+  top: max(14px, env(safe-area-inset-top));
+  right: var(--page-pad);
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+
+.langSwitch button {
+  min-width: 44px;
+  min-height: 36px;
+  padding: 2px 10px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+}
+
+.langSwitch .langActive {
+  background: var(--surface-2);
+  color: var(--text);
+  font-weight: 600;
 }
 
 .card {
   width: 100%;
-  max-width: 380px;
+  max-width: 400px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
   padding: 28px 24px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
 }
 
 .logo {
-  width: 56px;
-  height: 56px;
-  align-self: center;
-  border-radius: 14px;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  box-shadow: 0 0 0 1px var(--border), 0 8px 24px rgba(56, 189, 248, 0.2);
 }
 
 .title {
+  margin: 6px 0 0;
+  font-size: 1.6rem;
+  letter-spacing: 0.01em;
+}
+
+.tagline {
   margin: 0;
-  text-align: center;
-  font-size: 1.5rem;
+  color: var(--primary);
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
 .sub,
-.hint {
+.hint,
+.privacy {
   margin: 0;
   text-align: center;
   color: var(--text-muted);
   font-size: 0.9rem;
-  line-height: 1.4;
+  line-height: 1.45;
+}
+
+.privacy {
+  font-size: 0.8rem;
 }
 
 .field {
@@ -48,39 +101,95 @@
 }
 
 .field input {
-  min-height: 44px;
-  padding: 0 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px;
   font: inherit;
-  font-size: 1rem;
+  font-size: 16px; /* 16px+ stops iPhones zooming in on focus */
   color: var(--text);
   background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 12px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.field input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.6;
 }
 
 .field input:focus {
   outline: none;
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+}
+
+.passwordWrap {
+  position: relative;
+}
+
+.passwordWrap input {
+  padding-right: 72px;
+}
+
+.showBtn {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  min-height: 36px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--primary);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .error {
   margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(251, 191, 36, 0.1);
   color: var(--warn);
   font-size: 0.9rem;
 }
 
 .submit {
-  min-height: 46px;
+  min-height: 50px;
   font: inherit;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 700;
   color: var(--primary-text);
   background: var(--primary);
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
+  transition: transform 0.1s, opacity 0.15s;
+}
+
+.submit:active {
+  transform: scale(0.98);
 }
 
 .submit:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+/* phones: drop the box, use the whole width */
+@media (max-width: 480px) {
+  .page {
+    justify-content: flex-start;
+    padding-top: max(72px, calc(env(safe-area-inset-top) + 56px));
+  }
+  .card {
+    padding: 8px 4px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
 }

@@ -668,4 +668,6 @@ export const HI: Record<string, string> = {
   "Sign in": "साइन इन",
   "Don't have a login? Ask your gym or trainer.": "लॉगिन नहीं है? अपने जिम या ट्रेनर से पूछें।",
   "Sign out": "साइन आउट",
+  "Your AI form coach": "आपका AI फ़ॉर्म कोच",
+  "Your camera video never leaves your phone.": "आपका कैमरा वीडियो कभी आपके फ़ोन से बाहर नहीं जाता।",
 };
