@@ -5,3 +5,4 @@ _to_delete
 .env
 .env.*
 .vercel
+!.env.example

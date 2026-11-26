@@ -20,6 +20,7 @@ import { BUILT_IN_ROUTINES, loadCustomRoutines, newRoutineId, saveCustomRoutines
 import { defaultPlan, type SetResult, type WorkoutPlan } from './state/workoutSession';
 import { RecordingDownload } from './ui/components/RecordingDownload';
 import { sessionRecorder } from './engine/recorder';
+import { useAuth } from './cloud/AuthGate';
 import styles from './App.module.css';
 
 type Screen =
@@ -65,6 +66,7 @@ const EMPTY_ROUTINE: Routine = { id: '', name: '', steps: [], restBetweenSec: 90
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'picker' });
+  const { user, signOut } = useAuth();
   // "Record this session": asked before each workout, off by default
   const [record, setRecord] = useState(false);
   const [recordSound, setRecordSound] = useState(false);
@@ -186,6 +188,11 @@ export default function App() {
             </button>
           ))}
         </div>
+        {user && !inWorkout && (
+          <button className={styles.signOut} onClick={signOut} title={user.email ?? undefined}>
+            {t('Sign out')}
+          </button>
+        )}
       </header>
       <main className={styles.main}>
         {screen.name === 'picker' && (

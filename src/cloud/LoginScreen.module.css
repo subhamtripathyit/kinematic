@@ -1,0 +1,86 @@
+.page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: var(--page-pad);
+}
+
+.card {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 28px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.logo {
+  width: 56px;
+  height: 56px;
+  align-self: center;
+  border-radius: 14px;
+}
+
+.title {
+  margin: 0;
+  text-align: center;
+  font-size: 1.5rem;
+}
+
+.sub,
+.hint {
+  margin: 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.field input {
+  min-height: 44px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 1rem;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.error {
+  margin: 0;
+  color: var(--warn);
+  font-size: 0.9rem;
+}
+
+.submit {
+  min-height: 46px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--primary-text);
+  background: var(--primary);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.submit:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

@@ -111,3 +111,15 @@
     min-height: 40px;
   }
 }
+
+.signOut {
+  min-height: 30px;
+  padding: 2px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
