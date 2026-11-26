@@ -104,6 +104,31 @@ function plank(elbowDeg: number, bodyDropDeg = 0): Side {
   return { shoulder, elbow, wrist, hip, knee, ankle };
 }
 
+/** Seated tall, upper arm pointing up, elbow angle `e` with the forearm folding back behind the head. */
+function overhead(e: number): Side {
+  const s = standing(175, 0);
+  const elbow = at(s.shoulder, 0.12, -85);
+  const wrist = at(elbow, 0.12, -85 - (180 - e));
+  return { ...s, elbow, wrist };
+}
+
+/** Bent over (torso `lean` degrees forward of vertical); upper arm direction `upperDir` (90 = hanging), forearm hanging down. */
+function rowing(lean: number, upperDir: number): Side {
+  const s = standing(165, lean);
+  const elbow = at(s.shoulder, 0.12, upperDir);
+  const wrist = at(elbow, 0.12, 90);
+  return { ...s, elbow, wrist };
+}
+
+/** Seated in a machine: thigh forward, shin direction `shinDir` (90 = straight down, ~0 = straight out). */
+function seatedLegs(shinDir: number): Side {
+  const hip = { x: 0.45, y: 0.6 };
+  const shoulder = at(hip, 0.28, -100);
+  const knee = at(hip, 0.2, 0);
+  const ankle = at(knee, 0.2, shinDir);
+  return { shoulder, elbow: at(shoulder, 0.12, 80), wrist: at(shoulder, 0.24, 80), hip, knee, ankle };
+}
+
 /** Front view: one side's arm/leg, mirrored for the other side. `cx` is the body centre. */
 function frontPair(build: (dir: 1 | -1) => Side): [Side, Side] {
   return [build(-1), build(1)];
@@ -333,6 +358,82 @@ const CASES: Case[] = [
     id: 'jumping-jacks',
     good: (t) => front(frontArms(lerp(10, 165, t)), undefined),
     shallow: (t) => front(frontArms(lerp(10, 110, t))),
+  },
+
+  // ---------- Gym ----------
+  {
+    id: 'barbell-curl',
+    good: (t) => side(standing(175, 0, lerp(165, 40, t))),
+    shallow: (t) => side(standing(175, 0, lerp(165, 110, t))),
+    wrongPosition: (t) => side({ ...plank(170), wrist: plank(lerp(170, 40, t)).wrist }),
+  },
+  {
+    id: 'hammer-curl',
+    good: (t) => side(standing(175, 0, lerp(165, 45, t))),
+    shallow: (t) => side(standing(175, 0, lerp(165, 110, t))),
+    wrongPosition: (t) => side({ ...plank(170), wrist: plank(lerp(170, 40, t)).wrist }),
+  },
+  {
+    id: 'chin-ups',
+    good: (t) => {
+      const lms = front(hangArms(lerp(170, 50, t)));
+      lms[0] = { x: 0.5, y: lms[11].y - 0.12, z: 0, visibility: 0.9 };
+      return lms;
+    },
+    shallow: (t) => {
+      const lms = front(hangArms(lerp(170, 120, t)));
+      lms[0] = { x: 0.5, y: lms[11].y - 0.12, z: 0, visibility: 0.9 };
+      return lms;
+    },
+    wrongPosition: (t) => front(frontArms(10, lerp(170, 55, t))),
+  },
+  {
+    id: 'overhead-tricep-extension',
+    good: (t) => side(overhead(lerp(60, 170, t))),
+    shallow: (t) => side(overhead(lerp(60, 120, t))),
+    // same elbow movement with the arms down by your sides
+    wrongPosition: (t) => side(standing(175, 0, lerp(60, 170, t))),
+  },
+  {
+    id: 'rope-pushdown',
+    good: (t) => side(standing(175, 8, lerp(85, 170, t), 5)),
+    shallow: (t) => side(standing(175, 8, lerp(85, 130, t), 5)),
+    wrongPosition: (t) => side(plank(lerp(85, 170, t))),
+  },
+  {
+    id: 'rod-pushdown',
+    good: (t) => side(standing(175, 8, lerp(85, 170, t), 5)),
+    shallow: (t) => side(standing(175, 8, lerp(85, 130, t), 5)),
+    wrongPosition: (t) => side(plank(lerp(85, 170, t))),
+  },
+  {
+    id: 'dumbbell-row',
+    good: (t) => side(rowing(70, lerp(90, 185, t))),
+    shallow: (t) => side(rowing(70, lerp(90, 140, t))),
+    // same arm movement standing upright
+    wrongPosition: (t) => side(rowing(0, lerp(90, 185, t))),
+  },
+  {
+    id: 'weighted-squat',
+    good: (t) => side(standing(lerp(175, 85, t), lerp(5, 35, t))),
+    shallow: (t) => side(standing(lerp(175, 125, t), lerp(5, 15, t))),
+    wrongPosition: (t) => {
+      const s = lying(0);
+      const k = lerp(175, 85, t);
+      const knee = at(s.hip, 0.2, -((180 - k) / 2));
+      return side({ ...s, knee, ankle: at(knee, 0.2, (180 - k) / 2) });
+    },
+  },
+  {
+    id: 'leg-extension',
+    good: (t) => side(seatedLegs(lerp(90, 10, t))),
+    shallow: (t) => side(seatedLegs(lerp(90, 45, t))),
+    // lying flat, straightening the knee
+    wrongPosition: (t) => {
+      const s = lying(0);
+      const knee = { x: 0.62, y: 0.7 };
+      return side({ ...s, knee, ankle: at(knee, 0.2, lerp(60, -5, t)) });
+    },
   },
 ];
 

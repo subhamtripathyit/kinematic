@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { CATEGORIES, EXERCISES, exercisesByCategory, isHold } from '../../src/engine/exercises';
 
 describe('exercise registry', () => {
-  it('has 18 exercises (15 rep + 3 timed) with unique ids', () => {
-    expect(EXERCISES).toHaveLength(18);
+  it('has 27 exercises (24 rep + 3 timed) with unique ids', () => {
+    expect(EXERCISES).toHaveLength(27);
     expect(EXERCISES.filter(isHold)).toHaveLength(3);
     expect(new Set(EXERCISES.map((e) => e.id)).size).toBe(EXERCISES.length);
   });

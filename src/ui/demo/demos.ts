@@ -211,4 +211,96 @@ export const DEMOS: Record<string, Demo> = {
     howTo: 'Start in a high plank. Drive one knee toward your chest, then switch legs quickly, keeping your hips low.',
     mistakes: ['Hips rising too high', 'Not driving your knees far enough toward your chest', 'Bouncing your hips up and down'],
   },
+  // ---------- Gym ----------
+  'barbell-curl': {
+    frames: [
+      { ...standing, upperArm: 3, forearm: 5, upperArm2: 3, forearm2: 5 },
+      { ...standing, upperArm: 5, forearm: 150, upperArm2: 5, forearm2: 150 },
+    ],
+    periodMs: 2400,
+    placement: ground('ankle', 110),
+    howTo: 'Hold the bar at arm’s length, elbows at your sides. Curl it up to your shoulders, then lower until your arms are straight.',
+    mistakes: ['Swinging your back to lift the weight', 'Letting your elbows drift forward', 'Not straightening your arms at the bottom'],
+  },
+  'hammer-curl': {
+    frames: [
+      { ...standing, upperArm: 3, forearm: 5 },
+      { ...standing, upperArm: 5, forearm: 145 },
+    ],
+    periodMs: 2400,
+    placement: ground('ankle', 110),
+    howTo: 'Palms facing in, elbows at your sides. Curl the dumbbell up toward your shoulder, then lower until your arm is straight.',
+    mistakes: ['Swinging your back to lift the weight', 'Letting your elbows drift forward', 'Not straightening your arms at the bottom'],
+  },
+  'chin-ups': {
+    frames: [
+      { kind: 'front', armL: 165, forearmL: 170, legSpread: 3 },
+      { kind: 'front', armL: 70, forearmL: 165, legSpread: 3 },
+    ],
+    periodMs: 2600,
+    placement: { y: { mode: 'joint', joint: 'wL', y: 18 }, x: { joint: 'hip', x: 120 }, scale: 0.85 },
+    props: ['bar'],
+    howTo: 'Palms facing you, hands shoulder-width. Pull your chest up until your chin is over the bar, then lower all the way down.',
+    mistakes: ['Not going all the way down between reps', 'Chin not getting over the bar', 'Swinging or kicking your legs'],
+  },
+  'overhead-tricep-extension': {
+    frames: [
+      { kind: 'side', torso: 0, thigh: 90, shin: 0, upperArm: 172, forearm: 320, upperArm2: 172, forearm2: 320 },
+      { kind: 'side', torso: 0, thigh: 90, shin: 0, upperArm: 175, forearm: 182, upperArm2: 175, forearm2: 182 },
+    ],
+    periodMs: 2600,
+    placement: ground('ankle', 120),
+    howTo: 'Sit tall, one dumbbell in both hands behind your head, elbows pointing up. Straighten your arms overhead, then lower behind your head.',
+    mistakes: ['Letting your elbows drop forward', 'Arching your lower back', 'Not straightening your arms at the top'],
+  },
+  'rope-pushdown': {
+    frames: [
+      { kind: 'side', torso: 10, thigh: 0, shin: 0, upperArm: 5, forearm: 95 },
+      { kind: 'side', torso: 10, thigh: 0, shin: 0, upperArm: 3, forearm: 3 },
+    ],
+    periodMs: 2200,
+    placement: ground('ankle', 110),
+    howTo: 'Elbows pinned to your sides, palms facing in. Push the rope down until your arms are straight, then come back to forearms level.',
+    mistakes: ['Letting your elbows move forward', 'Leaning over the rope to push', 'Not straightening your arms at the bottom'],
+  },
+  'rod-pushdown': {
+    frames: [
+      { kind: 'side', torso: 10, thigh: 0, shin: 0, upperArm: 5, forearm: 95 },
+      { kind: 'side', torso: 10, thigh: 0, shin: 0, upperArm: 3, forearm: 3 },
+    ],
+    periodMs: 2200,
+    placement: ground('ankle', 110),
+    howTo: 'Elbows pinned to your sides, palms down on the bar. Push it down until your arms are straight, then come back to forearms level.',
+    mistakes: ['Letting your elbows move forward', 'Leaning over the bar to push', 'Not straightening your arms at the bottom'],
+  },
+  'dumbbell-row': {
+    frames: [
+      { kind: 'side', torso: 72, thigh: 15, shin: -10, upperArm: 0, forearm: 0, upperArm2: 0, forearm2: 0 },
+      { kind: 'side', torso: 72, thigh: 15, shin: -10, upperArm: -70, forearm: 0, upperArm2: 0, forearm2: 0 },
+    ],
+    periodMs: 2400,
+    placement: ground('ankle', 120),
+    howTo: 'Bend over with a flat back, arm hanging straight. Pull the dumbbell up to your hip, elbow going past your body, then lower slowly. Switch arms.',
+    mistakes: ['Standing up as you pull', 'Rounding your back', 'Not pulling your elbow high enough'],
+  },
+  'weighted-squat': {
+    frames: [
+      { ...standing, torso: 5, upperArm: -35, forearm: 165, upperArm2: -35, forearm2: 165 },
+      { kind: 'side', torso: 40, thigh: 85, shin: -30, upperArm: 5, forearm: 200, upperArm2: 5, forearm2: 200 },
+    ],
+    periodMs: 2800,
+    placement: ground('ankle', 110),
+    howTo: 'Bar resting on your upper back, feet shoulder-width. Sit back and down until your thighs are parallel to the floor, chest up, then stand tall.',
+    mistakes: ['Leaning too far forward under the bar', 'Knees caving inward', 'Not going deep enough'],
+  },
+  'leg-extension': {
+    frames: [
+      { kind: 'side', torso: -10, thigh: 90, shin: 0, upperArm: 15, forearm: 15 },
+      { kind: 'side', torso: -10, thigh: 90, shin: 85, upperArm: 15, forearm: 15 },
+    ],
+    periodMs: 2400,
+    placement: { y: { mode: 'joint', joint: 'hip', y: 120 }, x: { joint: 'hip', x: 100 } },
+    howTo: 'Sit back in the machine, pad on your lower shins. Straighten your legs until they are almost locked, then lower slowly.',
+    mistakes: ['Lifting your hips off the seat', 'Swinging the weight up', 'Not straightening your legs fully'],
+  },
 };

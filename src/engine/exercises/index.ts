@@ -1,3 +1,4 @@
+import { barbellCurl, chinUps, dumbbellRow, hammerCurl, legExtension, overheadTricepExtension, rodPushdown, ropePushdown, weightedSquat } from './gym';
 import type { ExerciseAnalyzer } from '../types';
 import {
   createAnalyzerFromDefinition,
@@ -44,6 +45,11 @@ export const EXERCISES: ExerciseDefinition[] = [
   bicepCurl,
   crunch, situp, kneeRaise, plank, sidePlank,
   jumpingJacks, mountainClimbers,
+  // Gym (weights + machines)
+  weightedSquat, legExtension,
+  dumbbellRow,
+  barbellCurl, hammerCurl, chinUps,
+  overheadTricepExtension, ropePushdown, rodPushdown,
 ];
 
 export function getExercise(id: string): ExerciseDefinition {
