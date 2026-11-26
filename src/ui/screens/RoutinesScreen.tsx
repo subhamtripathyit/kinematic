@@ -48,11 +48,7 @@ export function RoutinesScreen({ builtIn, custom, onStart, onNew, onEdit, onCopy
 
       <h2 className={styles.groupTitle}>{t('Recommended for level {n}', { n: effective })}</h2>
       <p className={styles.muted}>{t('Sets, reps and rest are adjusted to your level.')}</p>
-      <div className={styles.grid}>
-        {recommended.map((r) => (
-          <RoutineCard key={r.id} routine={r} onStart={onStart} onCopy={onCopy} />
-        ))}
-      </div>
+      <EquipmentGroups routines={recommended} onStart={onStart} onCopy={onCopy} />
 
       <h2 className={styles.groupTitle}>{t('My routines')}</h2>
       {custom.length === 0 ? (
@@ -70,11 +66,7 @@ export function RoutinesScreen({ builtIn, custom, onStart, onNew, onEdit, onCopy
       {others.length > 0 && (
         <>
           <h2 className={styles.groupTitle}>{t('More routines')}</h2>
-          <div className={styles.grid}>
-            {others.map((r) => (
-              <RoutineCard key={r.id} routine={r} onStart={onStart} onCopy={onCopy} />
-            ))}
-          </div>
+          <EquipmentGroups routines={others} onStart={onStart} onCopy={onCopy} />
         </>
       )}
     </section>
@@ -154,5 +146,35 @@ function RoutineCard({
           </button>
         ))}
     </div>
+  );
+}
+
+/** Built-in routines split into "Bodyweight" and "Gym" (like the exercise list). */
+function EquipmentGroups({
+  routines,
+  onStart,
+  onCopy,
+}: {
+  routines: Routine[];
+  onStart: (r: Routine) => void;
+  onCopy: (r: Routine) => void;
+}) {
+  const groups = [
+    { id: 'bodyweight', label: t('Bodyweight'), list: routines.filter((r) => r.equipment !== 'gym') },
+    { id: 'gym', label: t('Gym'), list: routines.filter((r) => r.equipment === 'gym') },
+  ].filter((g) => g.list.length > 0);
+  return (
+    <>
+      {groups.map((g) => (
+        <div key={g.id} className={styles.equipmentGroup}>
+          <h3 className={styles.subGroupTitle}>{g.label}</h3>
+          <div className={styles.grid}>
+            {g.list.map((r) => (
+              <RoutineCard key={r.id} routine={r} onStart={onStart} onCopy={onCopy} />
+            ))}
+          </div>
+        </div>
+      ))}
+    </>
   );
 }

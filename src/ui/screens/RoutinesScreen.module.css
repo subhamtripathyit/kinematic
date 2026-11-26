@@ -104,3 +104,18 @@
     width: 100%;
   }
 }
+
+/* "Bodyweight" / "Gym" inside a routines section */
+.equipmentGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.subGroupTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}

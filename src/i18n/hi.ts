@@ -650,4 +650,12 @@ export const HI: Record<string, string> = {
   "Straighten your arms all the way up": "बाज़ू पूरे ऊपर तक सीधे करें",
   "Straighten your legs all the way": "पैर पूरे सीधे करें",
   "Swinging the weight up": "वज़न को झटके से ऊपर उठाना",
+  "Push day (gym)": "पुश डे (जिम)",
+  "Shoulders, chest and triceps with dumbbells and cables.": "डंबल और केबल से कंधे, छाती और ट्राइसेप्स।",
+  "Pull day (gym)": "पुल डे (जिम)",
+  "Back and biceps: rows (8 each arm), chin-ups and curls.": "पीठ और बाइसेप्स: रो (हर हाथ से 8), चिन-अप्स और कर्ल।",
+  "Leg day (gym)": "लेग डे (जिम)",
+  "Barbell squats, Romanian deadlifts and the leg extension machine.": "बारबेल स्क्वैट, रोमानियन डेडलिफ्ट और लेग एक्सटेंशन मशीन।",
+  "Arms day (gym)": "आर्म्स डे (जिम)",
+  "Biceps and triceps, back to back.": "बाइसेप्स और ट्राइसेप्स, एक के बाद एक।",
 };

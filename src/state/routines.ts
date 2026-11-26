@@ -18,6 +18,8 @@ export interface Routine {
   builtIn?: boolean;
   /** built-in only: the levels this routine is recommended for */
   levels?: [Level, Level];
+  /** built-in only: needs gym equipment (weights, machines) or just bodyweight */
+  equipment?: 'bodyweight' | 'gym';
 }
 
 const reps = (exerciseId: string, sets: number, target: number, restSec = 60): RoutineStep => ({
@@ -32,6 +34,7 @@ const hold = (exerciseId: string, sets: number, seconds: number, restSec = 45): 
 export const BUILT_IN_ROUTINES: Routine[] = [
   {
     id: 'builtin-leg-day',
+    equipment: 'bodyweight',
     levels: [2, 6],
     name: 'Leg day',
     description: 'Squats, lunges and glutes, finished with a wall sit.',
@@ -41,6 +44,7 @@ export const BUILT_IN_ROUTINES: Routine[] = [
   },
   {
     id: 'builtin-upper-body',
+    equipment: 'gym',
     levels: [2, 6],
     name: 'Upper body',
     description: 'Chest, shoulders and arms.',
@@ -56,6 +60,7 @@ export const BUILT_IN_ROUTINES: Routine[] = [
   },
   {
     id: 'builtin-core-blast',
+    equipment: 'bodyweight',
     levels: [2, 6],
     name: 'Core blast',
     description: 'Crunches, knee raises and planks.',
@@ -71,6 +76,7 @@ export const BUILT_IN_ROUTINES: Routine[] = [
   },
   {
     id: 'builtin-full-body-beginner',
+    equipment: 'bodyweight',
     levels: [1, 3],
     name: 'Full body (beginner)',
     description: 'A short, easy full-body session.',
@@ -82,6 +88,69 @@ export const BUILT_IN_ROUTINES: Routine[] = [
       reps('glute-bridge', 2, 12),
       hold('plank', 2, 20),
       reps('jumping-jacks', 2, 20, 45),
+    ],
+  },
+  {
+    id: 'builtin-push-gym',
+    name: 'Push day (gym)',
+    description: 'Shoulders, chest and triceps with dumbbells and cables.',
+    builtIn: true,
+    equipment: 'gym',
+    levels: [2, 6],
+    restBetweenSec: 90,
+    steps: [
+      reps('shoulder-press', 3, 10, 90),
+      reps('pushup', 3, 12),
+      reps('lateral-raise', 3, 12),
+      reps('overhead-tricep-extension', 3, 12),
+      reps('rope-pushdown', 3, 12),
+    ],
+  },
+  {
+    id: 'builtin-pull-gym',
+    name: 'Pull day (gym)',
+    description: 'Back and biceps: rows (8 each arm), chin-ups and curls.',
+    builtIn: true,
+    equipment: 'gym',
+    levels: [2, 6],
+    restBetweenSec: 90,
+    steps: [
+      reps('dumbbell-row', 3, 16, 75),
+      reps('chin-ups', 3, 6, 90),
+      reps('barbell-curl', 3, 10),
+      reps('hammer-curl', 3, 12),
+    ],
+  },
+  {
+    id: 'builtin-legs-gym',
+    name: 'Leg day (gym)',
+    description: 'Barbell squats, Romanian deadlifts and the leg extension machine.',
+    builtIn: true,
+    equipment: 'gym',
+    levels: [2, 6],
+    restBetweenSec: 120,
+    steps: [
+      reps('weighted-squat', 4, 8, 120),
+      reps('deadlift', 3, 10, 90),
+      reps('leg-extension', 3, 12),
+      reps('lunge', 3, 10),
+      hold('wall-sit', 2, 30),
+    ],
+  },
+  {
+    id: 'builtin-arms-gym',
+    name: 'Arms day (gym)',
+    description: 'Biceps and triceps, back to back.',
+    builtIn: true,
+    equipment: 'gym',
+    levels: [2, 6],
+    restBetweenSec: 75,
+    steps: [
+      reps('barbell-curl', 3, 10),
+      reps('rod-pushdown', 3, 12),
+      reps('hammer-curl', 3, 12),
+      reps('overhead-tricep-extension', 3, 12),
+      reps('rope-pushdown', 3, 12),
     ],
   },
 ];
